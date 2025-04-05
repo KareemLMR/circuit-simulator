@@ -1,0 +1,1 @@
+add_executable(${PROJECT_NAME} main.cpp Device.cpp Node.cpp TwoTerminal.cpp Resistor.cpp)
