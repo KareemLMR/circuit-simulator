@@ -57,6 +57,26 @@ void Resistor::calculateCurrent()
     setCurrent(i);
 }
 
+std::map<Node, double> Resistor::getCurrentCoefficients(const Node& node)
+{
+    std::map<Node, double> currentCoefficients;
+    currentCoefficients[node] = 1.0 / m_r;
+    if (node == getPins()[0])
+    {
+        currentCoefficients[getPins()[1]] = -1.0 / m_r;
+    }
+    else if (node == getPins()[1])
+    {
+        currentCoefficients[getPins()[0]] = -1.0 / m_r;
+    }
+    else
+    {
+        std::cout << "Invalid node" << std::endl;
+        return {};
+    }
+    return currentCoefficients;
+}
+
 Resistor::~Resistor()
 {
     setResistance(0);

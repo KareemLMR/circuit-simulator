@@ -2,6 +2,7 @@
 #define RESISTOR_H_
 
 #include "TwoTerminal.h"
+#include <iostream>
 
 class Resistor : public TwoTerminal
 {
@@ -19,6 +20,10 @@ class Resistor : public TwoTerminal
         void setResistance(double r);
 
         void calculateCurrent() override;
+        std::map<Node, double> getCurrentCoefficients(const Node& node) override;
+        bool isSource() override { return false; }
+        double getVoltage(const Node& node) override { return getV1() - getV2(); }
+        
 
         ~Resistor();
     private:

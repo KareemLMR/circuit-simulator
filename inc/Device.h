@@ -3,6 +3,7 @@
 
 #include "Node.h"
 #include "vector"
+#include <map>
 
 class Device
 {
@@ -31,6 +32,9 @@ class Device
         std::vector<std::vector<double>>& getCurrents(void);
 
         virtual void updateDeviceState() = 0;
+        virtual std::map<Node, double> getCurrentCoefficients(const Node& node) = 0;
+        virtual bool isSource() = 0;
+        virtual double getVoltage(const Node& node) = 0;
 
         virtual ~Device();
 

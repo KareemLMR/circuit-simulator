@@ -54,10 +54,21 @@ Node& Node::operator=(const Node&& node)
     return *this;
 }
 
-bool Node::operator<(const Node& node)
+bool Node::operator<(const Node& node) const
 {
     return m_name < node.getName();
 }
+
+bool Node::operator==(const Node& node)
+{
+    return m_name == node.getName();
+}
+
+bool Node::operator!=(const Node& node)
+{
+    return m_name != node.getName();
+}
+
 
 std::string Node::getName(void)
 {

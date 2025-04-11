@@ -16,7 +16,10 @@ class Node
         Node& operator=(const Node& node);
         Node& operator=(const Node&& node);
 
-        bool operator<(const Node& node);
+        bool operator<(const Node& node) const;
+        bool operator== (const Node& node);
+        bool operator!= (const Node& node);
+        
 
         std::string getName(void);
         double getVolt(void);
