@@ -42,7 +42,9 @@ class CircuitManager
         void initializeCircuitMatrix(std::map<Node, std::vector<double>>& circuitMatrix);
         std::unique_ptr<Node> findWhichNodeConnected(const Node& node, const Device& device);
         std::unique_ptr<Node> findWhichNodeConnected(const Node& node, const std::set<Node>& nodes);
-        void connectSources(std::map<Node, std::vector<double>>& circuitMatrix, std::map<Node, int>& indexMap);
+        std::map<std::pair<Node, Node>, double> checkSourcesConnected(const Node& node,
+                                                                      std::vector<std::shared_ptr<Device>>& adjacentDevices,
+                                                                      const std::set<Node>& nodes);
         void calculateCircuitMatrix();
 
         std::vector<std::vector<double>>& getCircuitMatrix() { return m_circuitMatrix; }

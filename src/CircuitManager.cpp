@@ -95,22 +95,14 @@ bool CircuitManager::connect(const Node& node1, const Node& node2)
         std::cout << "Requested to connect invalid nodes!" << std::endl;
         return false;
     }
-    if (m_pinOf[node1]->isSource() || m_pinOf[node2]->isSource())
+
+    Node root2 = m_connected[node2];
+    Node root1 = m_connected[node1];
+    for (auto& node : m_connected)
     {
-        std::cout << "Delay connecting voltage source" << std::endl;
-        std::pair<Node, Node> toBeConnected({node1, node2});
-        m_sourceNodes.push_back(toBeConnected);
-    }
-    else
-    {
-        Node root2 = m_connected[node2];
-        Node root1 = m_connected[node1];
-        for (auto& node : m_connected)
+        if (node.second == root1)
         {
-            if (node.second == root1)
-            {
-                node.second = root2;
-            }
+            node.second = root2;
         }
     }
     
@@ -188,80 +180,30 @@ std::unique_ptr<Node> CircuitManager::findWhichNodeConnected(const Node& node, c
     return nullptr;
 }
 
-void CircuitManager::connectSources(std::map<Node, std::vector<double>>& circuitMatrix, std::map<Node, int>& indexMap)
+std::map<std::pair<Node, Node>, double> CircuitManager::checkSourcesConnected(const Node& node,
+                                                                              std::vector<std::shared_ptr<Device>>& adjacentDevices,
+                                                                              const std::set<Node>& nodes)
 {
-    std::set<Node> uniqueNodes = getUniqueNodes();
-    std::map<std::shared_ptr<Device>, std::vector<std::pair<Node, Node>>> rowsToBeAdded;
-    for (auto& sourceNode : m_sourceNodes)
+    std::map<std::pair<Node, Node>, double> sources;
+    for (auto& device : adjacentDevices)
     {
-        std::unique_ptr<Node> foundNode = nullptr;
-        if (!m_pinOf[sourceNode.first]->isSource())
+        if (device->isSource())
         {
-            foundNode = findWhichNodeConnected(sourceNode.first, uniqueNodes);
-            if (foundNode != nullptr)
+            std::unique_ptr<Node> sourceNode1 = findWhichNodeConnected(node, *device);
+            std::unique_ptr<Node> sourceNode2;
+            if (*sourceNode1 == device->getPins()[0])
             {
-                rowsToBeAdded[m_pinOf[sourceNode.second]].push_back(std::pair<Node, Node>(sourceNode.second, *foundNode));
+                sourceNode2 = std::make_unique<Node>(device->getPins()[1]);
             }
             else
             {
-                std::cout << "Invalid node found! " << sourceNode.first.getName() << std::endl;
+                sourceNode2 = std::make_unique<Node>(device->getPins()[0]);
             }
-        }
-        else if (!m_pinOf[sourceNode.second]->isSource())
-        {
-            foundNode = findWhichNodeConnected(sourceNode.second, uniqueNodes);
-            if (foundNode != nullptr)
-            {
-                rowsToBeAdded[m_pinOf[sourceNode.first]].push_back(std::pair<Node, Node>(sourceNode.first, *foundNode));
-            }
-            else
-            {
-                std::cout << "Invalid node found! " << sourceNode.second.getName() << std::endl;
-            }
-        }
-        else
-        {
-            std::cout << "Rejecting a source connection!" << std::endl;
+            auto otherConnectedSourceNode = findWhichNodeConnected(*sourceNode2, nodes);
+            sources[{node, *otherConnectedSourceNode}] = device->getVoltage(*sourceNode1);
         }
     }
-    m_voltages.resize(uniqueNodes.size());
-    for (auto& device : rowsToBeAdded)
-    {
-        //TODO: Check that line again!
-        int maxIndex = std::max(indexMap[device.second[0].second], indexMap[device.second[1].second]);
-        int minIndex = std::min(indexMap[device.second[0].second], indexMap[device.second[1].second]);
-        auto maxNode = device.second[1];
-        auto minNode = device.second[0];
-        if (maxIndex == indexMap[device.second[0].second])
-        {
-            maxNode = device.second[0];
-            minNode = device.second[1];
-        }
-
-        m_voltages[maxIndex - 1] = device.first->getVoltage(minNode.first);
-        for (int i = 0 ; i < uniqueNodes.size() ; i++)
-        {
-            if (i == minIndex)
-            {
-                circuitMatrix[maxNode.second][i] = 1;
-            }
-            else if (i == maxIndex)
-            {
-                circuitMatrix[maxNode.second][i] = -1;
-            }
-            else
-            {
-                circuitMatrix[maxNode.second][i] = 0;
-            }
-        }
-        circuitMatrix.erase(minNode.second);
-    }
-    // for (auto& v: voltagesVector)
-    // {
-    //     std::cout << v << " ";
-    // }
-    // std::cout << std::endl;
-    // return voltagesVector;
+    return sources;
 }
 
 void CircuitManager::calculateCircuitMatrix()
@@ -269,60 +211,75 @@ void CircuitManager::calculateCircuitMatrix()
     std::map<Node, std::vector<double>> circuitMatrix;
     initializeCircuitMatrix(circuitMatrix);
     std::set<Node> uniqueNodes = getUniqueNodes();
-    std::map<Node, int> indexMap;
+    std::map<Node, bool> handledNodes;
     int index = 0;
     for (auto& node : uniqueNodes)
     {
-        indexMap[node] = index;
-    
-        for (auto& device : getAdjacentDevices(node))
+        if (handledNodes.find(node) == handledNodes.end())
         {
-            std::unique_ptr<Node> deviceNode = findWhichNodeConnected(node, *device);
-            std::map<Node, double> currentCoefficients = device->getCurrentCoefficients(*deviceNode);
-            for (auto& n : currentCoefficients)
+            auto adjacentDevices = getAdjacentDevices(node);
+            auto sourcesMap = checkSourcesConnected(node, adjacentDevices, uniqueNodes);
+
+            if (sourcesMap.empty())
             {
-                std::unique_ptr<Node> foundNode = findWhichNodeConnected(n.first, uniqueNodes);
-                if (foundNode != nullptr)
+                for (auto& device : adjacentDevices)
                 {
-                    circuitMatrix[*foundNode][index] += n.second;
+                    std::unique_ptr<Node> deviceNode = findWhichNodeConnected(node, *device);
+                    std::map<Node, double> currentCoefficients = device->getCurrentCoefficients(*deviceNode);
+                    for (auto& n : currentCoefficients)
+                    {
+                        std::unique_ptr<Node> foundNode = findWhichNodeConnected(n.first, uniqueNodes);
+                        if (foundNode != nullptr)
+                        {
+                            circuitMatrix[*foundNode][index] += n.second;
+                        }
+                        else
+                        {
+                            std::cout << "Invalid node found! " << n.first.getName() << std::endl;
+                        }
+                    }
                 }
-                else
+                m_voltages.push_back(0.0);
+            }
+            else
+            {
+                for (auto& source : sourcesMap)
                 {
-                    std::cout << "Invalid node found! " << n.first.getName() << std::endl;
+                    circuitMatrix[source.first.first][index] = 1.0;
+                    circuitMatrix[source.first.second][index] = -1.0;
+                    m_voltages.push_back(source.second);
+                    handledNodes[source.first.first] = true;
+                    handledNodes[source.first.second] = true;
+                    index++;
                 }
             }
+            index++;
+        }
+        else
+        {
+            m_voltages.push_back(0.0);
+        }
+    }
+
+    m_circuitMatrix.resize(circuitMatrix.size());
+    index = 0;
+    for (int i = 0 ; i < circuitMatrix.size() ; i++)
+    {
+        for (const auto& node : uniqueNodes)
+        {
+            m_circuitMatrix[index].push_back(circuitMatrix[node][i]);
         }
         index++;
     }
-    std::cout << "Calling connectSources" << std::endl;
-    connectSources(circuitMatrix, indexMap);
-    std::cout << "connectSources returned" << std::endl;
-    
 
     // Convert the map to a vector of vectors
     std::vector<double> groundVector;
     for (const auto& node : uniqueNodes)
     {
         groundVector.push_back(0.0);
-        m_circuitMatrix.push_back(circuitMatrix[node]);
     }
     groundVector[uniqueNodes.size() - 1] = 1.0;
     m_circuitMatrix.push_back(groundVector);
-    std::cout << "Circuit matrix:" << std::endl;
-    for (const auto& row : m_circuitMatrix)
-    {
-        for (const auto& element : row)
-        {
-            std::cout << element << " ";
-        }
-        std::cout << std::endl;
-    }
-    std::cout << "Voltages:" << std::endl;
-    for (const auto& voltage : m_voltages)
-    {
-        std::cout << voltage << " ";
-    }
-    std::cout << std::endl;
 }
 
 CircuitManager::~CircuitManager()
