@@ -149,6 +149,7 @@ void CircuitManager::initializeCircuitMatrix(std::map<Node, std::vector<double>>
         {
             circuitMatrix[node].push_back(0.0);
         }
+        m_voltages.push_back(0.0);
     }
 }
 
@@ -239,7 +240,7 @@ void CircuitManager::calculateCircuitMatrix()
                         }
                     }
                 }
-                m_voltages.push_back(0.0);
+                m_voltages[index] = 0.0;
             }
             else
             {
@@ -247,7 +248,7 @@ void CircuitManager::calculateCircuitMatrix()
                 {
                     circuitMatrix[source.first.first][index] = 1.0;
                     circuitMatrix[source.first.second][index] = -1.0;
-                    m_voltages.push_back(source.second);
+                    m_voltages[index] = source.second;
                     handledNodes[source.first.first] = true;
                     handledNodes[source.first.second] = true;
                     index++;
@@ -257,7 +258,7 @@ void CircuitManager::calculateCircuitMatrix()
         }
         else
         {
-            m_voltages.push_back(0.0);
+            m_voltages[index] = 0.0;
         }
     }
 
@@ -280,6 +281,7 @@ void CircuitManager::calculateCircuitMatrix()
     }
     groundVector[uniqueNodes.size() - 1] = 1.0;
     m_circuitMatrix.push_back(groundVector);
+    m_voltages.push_back(0.0);
 }
 
 CircuitManager::~CircuitManager()

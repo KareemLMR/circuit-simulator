@@ -4,6 +4,7 @@
 #include "CircuitManager.h"
 #include "Resistor.h"
 
+#include <eigen3/Eigen/Dense>
 
 int main()
 {
@@ -40,16 +41,34 @@ int main()
     cm.connect(R32, R52);
 
     cm.calculateCircuitMatrix();
+
     
-    for (auto coefficients : cm.getCircuitMatrix())
+    std::vector<double> A_flat;
+    for (const auto& row : cm.getCircuitMatrix())
     {
-        for (auto coefficient : coefficients)
-        {
-            std::cout << coefficient << " ";
-        }
-        std::cout << std::endl;
+        A_flat.insert(A_flat.end(), row.begin(), row.end());
     }
-    for (auto voltage : cm.getVoltages())
+
+    // Step 2: Get rows and columns
+    size_t rows = cm.getCircuitMatrix().size();
+    size_t cols = (rows > 0) ? cm.getCircuitMatrix()[0].size() : 0;
+
+    // Step 3: Map into Eigen::MatrixXd (RowMajor for correct layout)
+    Eigen::MatrixXd A = Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(A_flat.data(), rows, cols);
+    
+    Eigen::VectorXd b = Eigen::Map<Eigen::VectorXd>(cm.getVoltages().data(), cm.getVoltages().size());
+
+    Eigen::VectorXd x = A.colPivHouseholderQr().solve(b);
+    
+    // for (auto coefficients : cm.getCircuitMatrix())
+    // {
+    //     for (auto coefficient : coefficients)
+    //     {
+    //         std::cout << coefficient << " ";
+    //     }
+    //     std::cout << std::endl;
+    // }
+    for (auto voltage : x)
     {
         std::cout << voltage << " ";
     }
