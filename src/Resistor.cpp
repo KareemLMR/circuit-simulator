@@ -57,9 +57,9 @@ void Resistor::calculateCurrent()
     setCurrent(i);
 }
 
-std::map<Node, double> Resistor::getCurrentCoefficients(const Node& node)
+std::map<std::shared_ptr<Node>, double> Resistor::getCurrentCoefficients(const std::shared_ptr<Node>& node)
 {
-    std::map<Node, double> currentCoefficients;
+    std::map<std::shared_ptr<Node>, double> currentCoefficients;
     currentCoefficients[node] = 1.0 / m_r;
     if (node == getPins()[0])
     {

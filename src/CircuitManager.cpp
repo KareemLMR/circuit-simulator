@@ -8,7 +8,7 @@ CircuitManager::CircuitManager()
 {
 }
 
-CircuitManager& CircuitManager::getInstance()
+CircuitManager& CircuitManager::getInstance(void)
 {
     if (m_instance == nullptr)
     {
@@ -35,7 +35,9 @@ int CircuitManager::getDeviceTypeTerminals(DeviceType type)
 }
 
 
-bool CircuitManager::createDevice(DeviceType type, std::pair<std::string, std::vector<double>> deviceCharacteristics, std::vector<Node> pins)
+bool CircuitManager::createDevice(DeviceType type,
+                                  const std::pair<std::string, std::vector<double>>& deviceCharacteristics,
+                                  const std::vector<std::shared_ptr<Node>>& pins)
 {
     if (m_devices.find(deviceCharacteristics.first) != m_devices.end())
     {
@@ -87,17 +89,16 @@ bool CircuitManager::createDevice(DeviceType type, std::pair<std::string, std::v
     return true;
 }
 
-bool CircuitManager::connect(const Node& node1, const Node& node2)
+bool CircuitManager::connect(const std::shared_ptr<Node>& node1, const std::shared_ptr<Node>& node2)
 {
-    std::cout << "Try connecting" << std::endl;
     if (m_connected.find(node1) == m_connected.end() || m_connected.find(node2) == m_connected.end())
     {
         std::cout << "Requested to connect invalid nodes!" << std::endl;
         return false;
     }
 
-    Node root2 = m_connected[node2];
-    Node root1 = m_connected[node1];
+    std::shared_ptr<Node> root2 = m_connected[node2];
+    std::shared_ptr<Node> root1 = m_connected[node1];
     for (auto& node : m_connected)
     {
         if (node.second == root1)
@@ -109,12 +110,12 @@ bool CircuitManager::connect(const Node& node1, const Node& node2)
     return true;
 }
 
-bool CircuitManager::isConnected(const Node& node1, const Node& node2)
+bool CircuitManager::isConnected(const std::shared_ptr<Node>& node1, const std::shared_ptr<Node>& node2)
 {
     return m_connected[node1] == m_connected[node2];
 }
 
-std::vector<std::shared_ptr<Device>> CircuitManager::getAdjacentDevices(const Node& node)
+std::vector<std::shared_ptr<Device>> CircuitManager::getAdjacentDevices(const std::shared_ptr<Node>& node)
 {
     std::vector<std::shared_ptr<Device>> adjDevices;
     for (auto& currNode : m_connected)
@@ -127,9 +128,9 @@ std::vector<std::shared_ptr<Device>> CircuitManager::getAdjacentDevices(const No
     return adjDevices;
 }
 
-std::set<Node> CircuitManager::getUniqueNodes()
+std::set<std::shared_ptr<Node>> CircuitManager::getUniqueNodes(void)
 {
-    std::set<Node> uniqueNodes;
+    std::set<std::shared_ptr<Node>> uniqueNodes;
     for (auto& node : m_connected)
     {
         if (!m_pinOf[node.first]->isSource())
@@ -140,12 +141,12 @@ std::set<Node> CircuitManager::getUniqueNodes()
     return uniqueNodes;
 }
 
-void CircuitManager::initializeCircuitMatrix(std::map<Node, std::vector<double>>& circuitMatrix)
+void CircuitManager::initializeCircuitMatrix(std::map<std::shared_ptr<Node>, std::vector<double>>& circuitMatrix)
 {
-    std::set<Node> uniqueNodes = getUniqueNodes();
-    for (auto& node : uniqueNodes)
+    m_uniqueNodes = getUniqueNodes();
+    for (auto& node : m_uniqueNodes)
     {
-        for (int i = 0 ; i < uniqueNodes.size() ; i++)
+        for (int i = 0 ; i < m_uniqueNodes.size() ; i++)
         {
             circuitMatrix[node].push_back(0.0);
         }
@@ -153,90 +154,136 @@ void CircuitManager::initializeCircuitMatrix(std::map<Node, std::vector<double>>
     }
 }
 
-std::unique_ptr<Node> CircuitManager::findWhichNodeConnected(const Node& node, const Device& device)
+std::vector<std::shared_ptr<Node>> CircuitManager::findAllNodesConnected(const std::shared_ptr<Node>& node)
 {
-    std::unique_ptr<Node> foundNode;
+    std::vector<std::shared_ptr<Node>> allConnectedNodes;
+
+    for (auto& n : m_pinOf)
+    {
+        if (isConnected(node, n.first))
+        {
+            allConnectedNodes.push_back(n.first);
+        }
+    }
+    return allConnectedNodes;
+}
+
+std::shared_ptr<Node> CircuitManager::findWhichNodeConnected(const std::shared_ptr<Node>& node, const Device& device)
+{
     for (auto& n : device.getPins())
     {
         if (isConnected(node, n))
         {
-            foundNode = std::make_unique<Node>(n);
-            return foundNode;
+            return n;
         }
     }
     return nullptr;
 }
 
-std::unique_ptr<Node> CircuitManager::findWhichNodeConnected(const Node& node, const std::set<Node>& nodes)
+std::shared_ptr<Node> CircuitManager::findWhichNodeConnected(const std::shared_ptr<Node>& node, const std::set<std::shared_ptr<Node>>& nodes)
 {
-    std::unique_ptr<Node> foundNode;
     for (auto& n : nodes)
     {
         if (isConnected(node, n))
         {
-            foundNode = std::make_unique<Node>(n);
-            return foundNode;
+            return n;
         }
     }
     return nullptr;
 }
 
-std::map<std::pair<Node, Node>, double> CircuitManager::checkSourcesConnected(const Node& node,
-                                                                              std::vector<std::shared_ptr<Device>>& adjacentDevices,
-                                                                              const std::set<Node>& nodes)
+std::shared_ptr<Node> CircuitManager::findWhichNodeConnected(const std::shared_ptr<Node>& node)
 {
-    std::map<std::pair<Node, Node>, double> sources;
+    for (auto& n : m_uniqueNodes)
+    {
+        if (isConnected(node, n))
+        {
+            return n;
+        }
+    }
+    return nullptr;
+}
+
+std::map<std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>, double> CircuitManager::checkSourcesConnected(const std::shared_ptr<Node>& node,
+                                                                                                                std::vector<std::shared_ptr<Device>>& adjacentDevices,
+                                                                                                                const std::set<std::shared_ptr<Node>>& nodes)
+{
+    std::map<std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>, double> sources;
     for (auto& device : adjacentDevices)
     {
         if (device->isSource())
         {
-            std::unique_ptr<Node> sourceNode1 = findWhichNodeConnected(node, *device);
-            std::unique_ptr<Node> sourceNode2;
-            if (*sourceNode1 == device->getPins()[0])
+            std::shared_ptr<Node> sourceNode1 = findWhichNodeConnected(node, *device);
+            std::shared_ptr<Node> sourceNode2;
+            if (sourceNode1 == device->getPins()[0])
             {
-                sourceNode2 = std::make_unique<Node>(device->getPins()[1]);
+                sourceNode2 = device->getPins()[1];
             }
             else
             {
-                sourceNode2 = std::make_unique<Node>(device->getPins()[0]);
+                sourceNode2 = device->getPins()[0];
             }
-            auto otherConnectedSourceNode = findWhichNodeConnected(*sourceNode2, nodes);
-            sources[{node, *otherConnectedSourceNode}] = device->getVoltage(*sourceNode1);
+            auto otherConnectedSourceNode = findWhichNodeConnected(sourceNode2, nodes);
+            sources[{node, otherConnectedSourceNode}] = device->getVoltage(sourceNode1);
         }
     }
     return sources;
 }
 
-void CircuitManager::calculateCircuitMatrix()
+std::map<std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>, double> CircuitManager::checkSourcesConnected(const std::shared_ptr<Node>& node,
+                                                                                                                std::vector<std::shared_ptr<Device>>& adjacentDevices)
 {
-    std::map<Node, std::vector<double>> circuitMatrix;
+    std::map<std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>, double> sources;
+    for (auto& device : adjacentDevices)
+    {
+        if (device->isSource())
+        {
+            std::shared_ptr<Node> sourceNode1 = findWhichNodeConnected(node, *device);
+            std::shared_ptr<Node> sourceNode2;
+            if (sourceNode1 == device->getPins()[0])
+            {
+                sourceNode2 = device->getPins()[1];
+            }
+            else
+            {
+                sourceNode2 = device->getPins()[0];
+            }
+            auto otherConnectedSourceNode = findWhichNodeConnected(sourceNode2);
+            sources[{node, otherConnectedSourceNode}] = device->getVoltage(sourceNode1);
+        }
+    }
+    return sources;
+}
+
+void CircuitManager::calculateCircuitMatrix(void)
+{
+    std::map<std::shared_ptr<Node>, std::vector<double>> circuitMatrix;
     initializeCircuitMatrix(circuitMatrix);
-    std::set<Node> uniqueNodes = getUniqueNodes();
-    std::map<Node, bool> handledNodes;
+    std::map<std::shared_ptr<Node>, bool> handledNodes;
     int index = 0;
-    for (auto& node : uniqueNodes)
+    for (auto& node : m_uniqueNodes)
     {
         if (handledNodes.find(node) == handledNodes.end())
         {
             auto adjacentDevices = getAdjacentDevices(node);
-            auto sourcesMap = checkSourcesConnected(node, adjacentDevices, uniqueNodes);
+            auto sourcesMap = checkSourcesConnected(node, adjacentDevices);
 
             if (sourcesMap.empty())
             {
                 for (auto& device : adjacentDevices)
                 {
-                    std::unique_ptr<Node> deviceNode = findWhichNodeConnected(node, *device);
-                    std::map<Node, double> currentCoefficients = device->getCurrentCoefficients(*deviceNode);
+                    std::shared_ptr<Node> deviceNode = findWhichNodeConnected(node, *device);
+                    std::map<std::shared_ptr<Node>, double> currentCoefficients = device->getCurrentCoefficients(deviceNode);
                     for (auto& n : currentCoefficients)
                     {
-                        std::unique_ptr<Node> foundNode = findWhichNodeConnected(n.first, uniqueNodes);
+                        std::shared_ptr<Node> foundNode = findWhichNodeConnected(n.first);
                         if (foundNode != nullptr)
                         {
-                            circuitMatrix[*foundNode][index] += n.second;
+                            circuitMatrix[foundNode][index] += n.second;
                         }
                         else
                         {
-                            std::cout << "Invalid node found! " << n.first.getName() << std::endl;
+                            std::cout << "Invalid node found! " << n.first->getName() << std::endl;
                         }
                     }
                 }
@@ -260,13 +307,14 @@ void CircuitManager::calculateCircuitMatrix()
         {
             m_voltages[index] = 0.0;
         }
+        m_groundNode = node;
     }
 
     m_circuitMatrix.resize(circuitMatrix.size());
     index = 0;
     for (int i = 0 ; i < circuitMatrix.size() ; i++)
     {
-        for (const auto& node : uniqueNodes)
+        for (const auto& node : m_uniqueNodes)
         {
             m_circuitMatrix[index].push_back(circuitMatrix[node][i]);
         }
@@ -275,16 +323,82 @@ void CircuitManager::calculateCircuitMatrix()
 
     // Convert the map to a vector of vectors
     std::vector<double> groundVector;
-    for (const auto& node : uniqueNodes)
+    for (const auto& node : m_uniqueNodes)
     {
         groundVector.push_back(0.0);
     }
-    groundVector[uniqueNodes.size() - 1] = 1.0;
+    groundVector[m_uniqueNodes.size() - 1] = 1.0;
     m_circuitMatrix.push_back(groundVector);
     m_voltages.push_back(0.0);
 }
 
+void CircuitManager::solveCircuit(void)
+{
+    calculateCircuitMatrix();
+    
+    std::vector<double> A_flat;
+    for (const auto& row : getCircuitMatrix())
+    {
+        A_flat.insert(A_flat.end(), row.begin(), row.end());
+    }
+
+    // Step 2: Get rows and columns
+    size_t rows = getCircuitMatrix().size();
+    size_t cols = (rows > 0) ? getCircuitMatrix()[0].size() : 0;
+
+    // Step 3: Map into Eigen::MatrixXd (RowMajor for correct layout)
+    Eigen::MatrixXd A = Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(A_flat.data(), rows, cols);
+    
+    Eigen::VectorXd b = Eigen::Map<Eigen::VectorXd>(getVoltages().data(), getVoltages().size());
+
+    Eigen::VectorXd x = A.colPivHouseholderQr().solve(b);
+
+    int index = 0;
+    for (auto& node : m_uniqueNodes)
+    {
+        node->setVolt(x[index]);
+        for (auto& n : findAllNodesConnected(node))
+        {
+            n->setVolt(x[index]);
+        }
+        index++;
+    }
+
+    for (auto& device : m_devices)
+    {
+        device.second->forwardDeviceState();
+        device.second->calculateCurrent();
+    }
+    
+}
+
+std::pair<std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>> CircuitManager::queryDeviceVoltages(std::string deviceName)
+{
+    std::pair<std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>> deviceVoltages;
+    if (m_devices.find(deviceName) != m_devices.end())
+    {
+        deviceVoltages.first = m_groundNode;
+        deviceVoltages.second = m_devices[deviceName]->getPins();
+        return deviceVoltages;
+    }
+    else
+    {
+        return {};
+    }
+}
+
+std::vector<std::vector<double>> CircuitManager::queryDeviceCurrents(std::string deviceName)
+{
+    if (m_devices.find(deviceName) != m_devices.end())
+    {
+        return m_devices[deviceName]->getCurrents();
+    }
+    else
+    {
+        return {};
+    }
+}
+
 CircuitManager::~CircuitManager()
 {
-    m_instance = nullptr;
 }

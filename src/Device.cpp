@@ -16,7 +16,7 @@ Device::Device(int terminals) : m_name("dev" + std::to_string(m_counter++)), m_t
 {
     for (int i = 0 ; i < terminals ; i++)
     {
-        m_pins.push_back(Node());
+        m_pins.push_back(std::make_shared<Node>());
     }
     for (int i = 0 ; i < terminals ; i++)
     {
@@ -32,7 +32,7 @@ Device::Device(std::string name, int terminals) : m_name(name), m_terminals(term
 {
     for (int i = 0 ; i < terminals ; i++)
     {
-        m_pins.push_back(Node());
+        m_pins.push_back(std::make_shared<Node>());
     }
     for (int i = 0 ; i < terminals ; i++)
     {
@@ -106,12 +106,12 @@ void Device::setNumOfTerminals(int terminals)
     m_terminals = terminals;
 }
 
-void Device::setPins(const std::vector<Node>& pins)
+void Device::setPins(const std::vector<std::shared_ptr<Node>>& pins)
 {
     m_pins = pins;
 }
 
-void Device::setPins(std::vector<Node>&& pins)
+void Device::setPins(std::vector<std::shared_ptr<Node>> && pins)
 {
     m_pins = std::move(pins);
 }
@@ -136,7 +136,7 @@ int Device::getNumOfTerminals(void)
     return m_terminals;
 }
 
-std::vector<Node>& Device::getPins(void)
+std::vector<std::shared_ptr<Node>>& Device::getPins(void)
 {
     return m_pins;
 }

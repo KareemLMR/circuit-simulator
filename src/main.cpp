@@ -4,24 +4,22 @@
 #include "CircuitManager.h"
 #include "Resistor.h"
 
-#include <eigen3/Eigen/Dense>
-
 int main()
 {
     CircuitManager& cm = CircuitManager::getInstance();
-    Node R11 = Node("R11");
-    Node R12 = Node("R12");
-    Node R21 = Node("R21");
-    Node R22 = Node("R22");
-    Node R31 = Node("R31");
-    Node R32 = Node("R32");
-    Node R41 = Node("R41");
-    Node R42 = Node("R42");
-    Node R51 = Node("R51");
-    Node R52 = Node("R52");
+    std::shared_ptr<Node> R11 = std::make_shared<Node>(Node("R11"));
+    std::shared_ptr<Node> R12 = std::make_shared<Node>(Node("R12"));
+    std::shared_ptr<Node> R21 = std::make_shared<Node>(Node("R21"));
+    std::shared_ptr<Node> R22 = std::make_shared<Node>(Node("R22"));
+    std::shared_ptr<Node> R31 = std::make_shared<Node>(Node("R31"));
+    std::shared_ptr<Node> R32 = std::make_shared<Node>(Node("R32"));
+    std::shared_ptr<Node> R41 = std::make_shared<Node>(Node("R41"));
+    std::shared_ptr<Node> R42 = std::make_shared<Node>(Node("R42"));
+    std::shared_ptr<Node> R51 = std::make_shared<Node>(Node("R51"));
+    std::shared_ptr<Node> R52 = std::make_shared<Node>(Node("R52"));
     
-    Node VB1 = Node("VB1");
-    Node VB2 = Node("VB2");
+    std::shared_ptr<Node> VB1 = std::make_shared<Node>(Node("VB1"));
+    std::shared_ptr<Node> VB2 = std::make_shared<Node>(Node("VB2"));
 
     cm.createDevice(DeviceType::VOLTAGE_SOURCE, std::make_pair<std::string, std::vector<double>>("V", {100}), {VB1, VB2});
     
@@ -40,39 +38,21 @@ int main()
     cm.connect(R42, R52);
     cm.connect(R32, R52);
 
-    cm.calculateCircuitMatrix();
+    cm.solveCircuit();
 
-    
-    std::vector<double> A_flat;
-    for (const auto& row : cm.getCircuitMatrix())
+    for (auto& node : cm.queryDeviceVoltages("r1").second)
     {
-        A_flat.insert(A_flat.end(), row.begin(), row.end());
+        std::cout << node->getVolt() << std::endl;
     }
 
-    // Step 2: Get rows and columns
-    size_t rows = cm.getCircuitMatrix().size();
-    size_t cols = (rows > 0) ? cm.getCircuitMatrix()[0].size() : 0;
-
-    // Step 3: Map into Eigen::MatrixXd (RowMajor for correct layout)
-    Eigen::MatrixXd A = Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(A_flat.data(), rows, cols);
-    
-    Eigen::VectorXd b = Eigen::Map<Eigen::VectorXd>(cm.getVoltages().data(), cm.getVoltages().size());
-
-    Eigen::VectorXd x = A.colPivHouseholderQr().solve(b);
-    
-    // for (auto coefficients : cm.getCircuitMatrix())
-    // {
-    //     for (auto coefficient : coefficients)
-    //     {
-    //         std::cout << coefficient << " ";
-    //     }
-    //     std::cout << std::endl;
-    // }
-    for (auto voltage : x)
+    for (auto& path : cm.queryDeviceCurrents("r1"))
     {
-        std::cout << voltage << " ";
+        for (double current : path)
+        {
+            std::cout << current << " ";
+        }
+        std::cout << std::endl;
     }
-    std::cout << "Exiting" << std::endl;
     
     return 0;
 }

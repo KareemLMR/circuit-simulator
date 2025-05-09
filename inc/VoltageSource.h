@@ -19,10 +19,10 @@ class VoltageSource : public TwoTerminal
         VoltageSource& operator=(const VoltageSource&& voltageSource);
 
         bool isSource() override { return true; }
-        std::map<Node, double> getCurrentCoefficients(const Node& node) override { return {}; };
+        std::map<std::shared_ptr<Node>, double> getCurrentCoefficients(const std::shared_ptr<Node>& node) override { return {}; };
         void calculateCurrent() override {};
 
-        double getVoltage(const Node& node) override;
+        double getVoltage(const std::shared_ptr<Node>& node) override;
         void setVoltage(double v);
 
         ~VoltageSource();

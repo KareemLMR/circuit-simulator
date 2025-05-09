@@ -38,7 +38,7 @@ VoltageSource& VoltageSource::operator=(const VoltageSource&& voltageSource)
     return *this;
 }
 
-double VoltageSource::getVoltage(const Node& node)
+double VoltageSource::getVoltage(const std::shared_ptr<Node>& node)
 {
     if (node == getPins()[0])
     {

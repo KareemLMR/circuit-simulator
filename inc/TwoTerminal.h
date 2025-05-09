@@ -26,8 +26,7 @@ class TwoTerminal : public Device
         std::function<double(double, double)>  getTransferFunction(void);
 
         void updateDeviceState() override;
-
-        virtual void calculateCurrent() = 0;
+        void forwardDeviceState() override;
 
         virtual ~TwoTerminal();
 
