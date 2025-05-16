@@ -204,6 +204,18 @@ std::shared_ptr<Node> CircuitManager::findWhichNodeConnected(const std::shared_p
     return nullptr;
 }
 
+int CircuitManager::getDeviceNodeIndex(const std::shared_ptr<Node>& node, const Device& device)
+{
+    for (int i = 0 ; i < device.getPins().size() ; i++)
+    {
+        if (node == device.getPins()[i])
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
 std::map<std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>, double> CircuitManager::checkSourcesConnected(const std::shared_ptr<Node>& node,
                                                                                                                 std::vector<std::shared_ptr<Device>>& adjacentDevices,
                                                                                                                 const std::set<std::shared_ptr<Node>>& nodes)
@@ -332,22 +344,46 @@ void CircuitManager::calculateCircuitMatrix(void)
     m_voltages.push_back(0.0);
 }
 
-void CircuitManager::solveCircuit(void)
+Eigen::MatrixXd CircuitManager::convert2DVectorToMatrix(const std::vector<std::vector<double>>& vect)
 {
-    calculateCircuitMatrix();
-    
-    std::vector<double> A_flat;
-    for (const auto& row : getCircuitMatrix())
+    std::vector<double> AFlat;
+    for (const auto& row : vect)
     {
-        A_flat.insert(A_flat.end(), row.begin(), row.end());
+        AFlat.insert(AFlat.end(), row.begin(), row.end());
     }
 
     // Step 2: Get rows and columns
-    size_t rows = getCircuitMatrix().size();
-    size_t cols = (rows > 0) ? getCircuitMatrix()[0].size() : 0;
+    size_t rows = vect.size();
+    size_t cols = (rows > 0) ? vect[0].size() : 0;
 
     // Step 3: Map into Eigen::MatrixXd (RowMajor for correct layout)
-    Eigen::MatrixXd A = Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(A_flat.data(), rows, cols);
+    Eigen::MatrixXd A = Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(AFlat.data(), rows, cols);
+    
+    return A;
+}
+
+std::vector<std::vector<double>> CircuitManager::convertMatrixTo2DVector(const Eigen::MatrixXd& matrix)
+{
+    std::vector<std::vector<double>> vect;
+    vect.resize(matrix.rows());
+
+    for (int i = 0; i < matrix.rows(); ++i)
+    {
+        vect[i].resize(matrix.cols());
+        for (int j = 0; j < matrix.cols(); ++j)
+        {
+            vect[i][j] = matrix(i, j);
+        }
+    }
+    return vect;
+}
+
+void CircuitManager::solveCircuit(void)
+{
+    calculateCircuitMatrix();
+
+    // Step 3: Map into Eigen::MatrixXd (RowMajor for correct layout)
+    Eigen::MatrixXd A = convert2DVectorToMatrix(getCircuitMatrix());
     
     Eigen::VectorXd b = Eigen::Map<Eigen::VectorXd>(getVoltages().data(), getVoltages().size());
 
@@ -368,6 +404,38 @@ void CircuitManager::solveCircuit(void)
     {
         device.second->forwardDeviceState();
         device.second->calculateCurrent();
+    }
+
+    //TODO: Check this logic again for multiple sources connected.
+    for (auto& device : m_devices)
+    {
+        Eigen::MatrixXd currentMatrix(2, 2);
+        currentMatrix << 0.0, 0.0,
+                         0.0, 0.0;
+        if (device.second->isSource())
+        {
+            for (auto& adjDevice : getAdjacentDevices(device.second->getPins()[0]))
+            {
+                std::vector<std::vector<double>> adjCurrents = adjDevice->getCurrents();
+                Eigen::MatrixXd adjCurrentsMatrix;
+                if (adjCurrents.size() == 2 && adjCurrents[0].size() == 2 && adjCurrents[1].size() == 2)
+                {
+                    adjCurrentsMatrix = convert2DVectorToMatrix(adjCurrents);
+                }
+                else
+                {
+                    std::shared_ptr<Node> connectedNode = findWhichNodeConnected(device.second->getPins()[0], *adjDevice);
+                    int nodeIndex = getDeviceNodeIndex(connectedNode, *adjDevice);
+
+                    adjCurrentsMatrix = convert2DVectorToMatrix(adjCurrents);
+                    adjCurrentsMatrix << 0.0, adjCurrentsMatrix.row(nodeIndex).sum(),
+                                         adjCurrentsMatrix.col(nodeIndex).sum(), 0.0;
+                }
+                currentMatrix += adjCurrentsMatrix;
+            }
+        }
+        std::vector<std::vector<double>> currents = convertMatrixTo2DVector(currentMatrix);
+        device.second->setCurrents(currents);
     }
     
 }

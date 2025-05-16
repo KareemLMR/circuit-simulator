@@ -45,7 +45,7 @@ int main()
         std::cout << node->getVolt() << std::endl;
     }
 
-    for (auto& path : cm.queryDeviceCurrents("r1"))
+    for (auto& path : cm.queryDeviceCurrents("V"))
     {
         for (double current : path)
         {

@@ -8,6 +8,7 @@
 #include <memory>
 #include <set>
 #include <eigen3/Eigen/Dense>
+#include <numeric> 
 
 enum class DeviceType
 {
@@ -47,6 +48,8 @@ class CircuitManager
         std::shared_ptr<Node> findWhichNodeConnected(const std::shared_ptr<Node>& node, const Device& device);
         std::shared_ptr<Node> findWhichNodeConnected(const std::shared_ptr<Node>& node, const std::set<std::shared_ptr<Node>>& nodes);
         std::shared_ptr<Node> findWhichNodeConnected(const std::shared_ptr<Node>& node);
+        int getDeviceNodeIndex(const std::shared_ptr<Node>& node, const Device& device);
+
         std::map<std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>, double> checkSourcesConnected(const std::shared_ptr<Node>& node,
                                                                                                         std::vector<std::shared_ptr<Device>>& adjacentDevices,
                                                                                                         const std::set<std::shared_ptr<Node>>& nodes);
@@ -54,6 +57,9 @@ class CircuitManager
                                                                                                         std::vector<std::shared_ptr<Device>>& adjacentDevices);
         
         void calculateCircuitMatrix(void);
+
+        Eigen::MatrixXd convert2DVectorToMatrix(const std::vector<std::vector<double>>& vect);
+        std::vector<std::vector<double>> convertMatrixTo2DVector(const Eigen::MatrixXd& matrix);
 
         void solveCircuit(void);
 
