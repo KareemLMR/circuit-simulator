@@ -23,7 +23,7 @@ class Resistor : public TwoTerminal
         std::map<std::shared_ptr<Node>, double> getCurrentCoefficients(const std::shared_ptr<Node>& node) override;
         bool isSource() override { return false; }
         double getVoltage(const std::shared_ptr<Node>& node) override { return getV1() - getV2(); }
-        
+        void refresh(double time) override {}
 
         ~Resistor();
     private:

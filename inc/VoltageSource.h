@@ -25,6 +25,8 @@ class VoltageSource : public TwoTerminal
         double getVoltage(const std::shared_ptr<Node>& node) override;
         void setVoltage(double v);
 
+        void refresh(double time) override;
+
         ~VoltageSource();
         
     private:

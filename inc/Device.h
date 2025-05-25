@@ -29,7 +29,7 @@ class Device
 
         std::string getName(void);
         int getNumOfTerminals(void);
-        std::vector<std::shared_ptr<Node>> & getPins(void);
+        std::vector<std::shared_ptr<Node>>& getPins(void);
         std::vector<std::vector<double>>& getCurrents(void);
 
         virtual void updateDeviceState() = 0;
@@ -38,6 +38,7 @@ class Device
         virtual bool isSource() = 0;
         virtual double getVoltage(const std::shared_ptr<Node>& node) = 0;
         virtual void calculateCurrent() = 0;
+        virtual void refresh(double time) = 0;
 
         virtual ~Device();
 

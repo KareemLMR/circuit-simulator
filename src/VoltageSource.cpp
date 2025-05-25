@@ -66,6 +66,11 @@ void VoltageSource::setVoltage(double v)
     m_v = v;
 }
 
+void VoltageSource::refresh(double time)
+{
+    
+}
+
 VoltageSource::~VoltageSource()
 {
     setVoltage(0.0);
