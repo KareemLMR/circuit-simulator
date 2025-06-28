@@ -2,6 +2,7 @@
 #include "Node.h"
 #include <map>
 #include "CircuitManager.h"
+#include "Orchestrator.h"
 #include "Resistor.h"
 
 int main()
@@ -38,21 +39,13 @@ int main()
     cm.connect(R42, R52);
     cm.connect(R32, R52);
 
-    cm.solveCircuit();
+    Orchestrator& oc = Orchestrator::getInstance();
+    oc.init(1.0, 1000.0, &cm);
+    oc.start();
 
-    for (auto& node : cm.queryDeviceVoltages("r1").second)
+    while (1)
     {
-        std::cout << node->getVolt() << std::endl;
-    }
 
-    for (auto& path : cm.queryDeviceCurrents("V"))
-    {
-        for (double current : path)
-        {
-            std::cout << current << " ";
-        }
-        std::cout << std::endl;
     }
-    
     return 0;
 }

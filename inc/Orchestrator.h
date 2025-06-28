@@ -4,6 +4,9 @@
 #include <memory>
 #include <iostream>
 #include <thread>
+#include <atomic>
+#include "ICircuitManager.h"
+#include <functional>
 
 class Orchestrator
 {
@@ -16,7 +19,9 @@ class Orchestrator
         Orchestrator& operator=(const Orchestrator& other) = delete;
         Orchestrator& operator=(const Orchestrator&& other) = delete;
 
-        bool init(double userInterfaceClockFrequency, double circuitRefreshFrequency);
+        bool init(double userInterfaceClockFrequency, double circuitRefreshFrequency, ICircuitManager* circuitManager);
+        bool start(void);
+        void orchestrate(void);
 
         static Orchestrator& getInstance(void);
 
@@ -27,6 +32,8 @@ class Orchestrator
         double m_userInterfaceClockFrequency;
         double m_circuitRefreshFrequency;
         std::thread m_userInterfaceThread;
+        ICircuitManager* m_circuitManager;
+        std::atomic<bool> m_isInitialized = false;
 };
 
 #endif

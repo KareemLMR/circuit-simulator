@@ -1,1 +1,1 @@
-add_executable(${PROJECT_NAME} main.cpp Device.cpp Node.cpp TwoTerminal.cpp Resistor.cpp CircuitManager.cpp VoltageSource.cpp)
+add_executable(${PROJECT_NAME} main.cpp Device.cpp Node.cpp TwoTerminal.cpp Resistor.cpp CircuitManager.cpp VoltageSource.cpp Orchestrator.cpp)

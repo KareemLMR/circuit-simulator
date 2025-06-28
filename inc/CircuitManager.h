@@ -9,20 +9,9 @@
 #include <set>
 #include <eigen3/Eigen/Dense>
 #include <numeric> 
+#include "ICircuitManager.h"
 
-enum class DeviceType
-{
-    RESISTOR,
-    CAPACITOR,
-    INDUCTOR,
-    DIODE,
-    TRANSISTOR,
-    VOLTAGE_SOURCE,
-    CURRENT_SOURCE
-};
-
-
-class CircuitManager
+class CircuitManager : public ICircuitManager
 {
     public:
         CircuitManager();
@@ -37,10 +26,10 @@ class CircuitManager
 
         bool createDevice(DeviceType type,
                           const std::pair<std::string, std::vector<double>>& deviceCharacteristics,
-                          const std::vector<std::shared_ptr<Node>>& pins = {});
+                          const std::vector<std::shared_ptr<Node>>& pins = {}) override;
 
-        bool connect(const std::shared_ptr<Node>& node1, const std::shared_ptr<Node>& node2);
-        bool isConnected(const std::shared_ptr<Node>& node1, const std::shared_ptr<Node>& node2);
+        bool connect(const std::shared_ptr<Node>& node1, const std::shared_ptr<Node>& node2) override;
+        bool isConnected(const std::shared_ptr<Node>& node1, const std::shared_ptr<Node>& node2) override;
         std::vector<std::shared_ptr<Device>> getAdjacentDevices(const std::shared_ptr<Node>& node);
         std::set<std::shared_ptr<Node>> getUniqueNodes(void);
         void initializeCircuitMatrix(std::map<std::shared_ptr<Node>, std::vector<double>>& circuitMatrix);
@@ -61,13 +50,13 @@ class CircuitManager
         Eigen::MatrixXd convert2DVectorToMatrix(const std::vector<std::vector<double>>& vect);
         std::vector<std::vector<double>> convertMatrixTo2DVector(const Eigen::MatrixXd& matrix);
 
-        void solveCircuit(void);
+        void solveCircuit(void) override;
 
         std::vector<std::vector<double>>& getCircuitMatrix() { return m_circuitMatrix; }
         std::vector<double>& getVoltages() { return m_voltages; }
         
-        std::pair<std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>> queryDeviceVoltages(std::string deviceName);
-        std::vector<std::vector<double>> queryDeviceCurrents(std::string deviceName);
+        std::pair<std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>> queryDeviceVoltages(std::string deviceName) override;
+        std::vector<std::vector<double>> queryDeviceCurrents(std::string deviceName) override;
 
         ~CircuitManager();
 

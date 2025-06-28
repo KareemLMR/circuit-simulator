@@ -17,26 +17,83 @@ Orchestrator& Orchestrator::getInstance(void)
     return *m_instance;
 }
 
-bool Orchestrator::init(double userInterfaceClockFrequency, double circuitRefreshFrequency)
+bool Orchestrator::init(double userInterfaceClockFrequency, double circuitRefreshFrequency, ICircuitManager* circuitManager)
 {
-    if (userInterfaceClockFrequency > circuitRefreshFrequency)
+    if (m_isInitialized)
     {
-        std::cout << "circuitRefreshFrequency must be bigger than userInterfaceClockFrequency" << std::endl;
-        return false;
+        std::cout << "Orchestrator is already initialized!" << std::endl;
     }
-    if (userInterfaceClockFrequency <= 0 || circuitRefreshFrequency <= 0)
+    else
     {
-        std::cout << "userInterfaceClockFrequency and circuitRefreshFrequency must be positive integers" << std::endl;
-        return false;
+        if (circuitManager == nullptr)
+        {
+            std::cout << "Circuit Manager is not initialized!" << std::endl;
+            return false;
+        }
+        if (userInterfaceClockFrequency > circuitRefreshFrequency)
+        {
+            std::cout << "circuitRefreshFrequency must be bigger than userInterfaceClockFrequency" << std::endl;
+            return false;
+        }
+        if (userInterfaceClockFrequency <= 0 || circuitRefreshFrequency <= 0)
+        {
+            std::cout << "userInterfaceClockFrequency and circuitRefreshFrequency must be positive integers" << std::endl;
+            return false;
+        }
+        if (userInterfaceClockFrequency > MAX_USER_INTERFACE_FREQUENCY_SUPPORTED)
+        {
+            std::cout << "userInterfaceClockFrequency provided is bigger than supported maximum value of " << MAX_USER_INTERFACE_FREQUENCY_SUPPORTED << std::endl;
+            return false;
+        }
+
+        m_userInterfaceClockFrequency = userInterfaceClockFrequency;
+        m_circuitRefreshFrequency = circuitRefreshFrequency;
+        m_circuitManager = circuitManager;
+        m_isInitialized = true;
     }
-    if (userInterfaceClockFrequency > MAX_USER_INTERFACE_FREQUENCY_SUPPORTED)
-    {
-        std::cout << "userInterfaceClockFrequency provided is bigger than supported maximum value of " << MAX_USER_INTERFACE_FREQUENCY_SUPPORTED << std::endl;
-        return false;
-    }
-    m_userInterfaceClockFrequency = userInterfaceClockFrequency;
-    m_circuitRefreshFrequency = circuitRefreshFrequency;
+    
 
     return true;
+}
+
+bool Orchestrator::start(void)
+{
+    if (!m_isInitialized)
+    {
+        std::cout << "Orchestrator is not initialized!" << std::endl;
+        return false;
+    }
+    m_userInterfaceThread = std::thread((std::bind(&Orchestrator::orchestrate, this)));
+    m_userInterfaceThread.detach();
+    return true;
+}
+
+void Orchestrator::orchestrate(void)
+{
+    while (true)
+    {
+        m_circuitManager->solveCircuit();
+        for (auto& node : m_circuitManager->queryDeviceVoltages("r1").second)
+        {
+            std::cout << node->getVolt() << std::endl;
+        }
+
+        for (auto& path : m_circuitManager->queryDeviceCurrents("V"))
+        {
+            for (double current : path)
+            {
+                std::cout << current << " ";
+            }
+            std::cout << std::endl;
+        }
+        std::chrono::duration<double> sleep_time(1.0 / m_userInterfaceClockFrequency);
+        std::this_thread::sleep_for(sleep_time);
+    }
+
+}
+
+Orchestrator::~Orchestrator()
+{
+    
 }
 
