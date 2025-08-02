@@ -20,10 +20,9 @@ class Resistor : public TwoTerminal
         void setResistance(double r);
 
         void calculateCurrent() override;
-        std::map<std::shared_ptr<Node>, double> getCurrentCoefficients(const std::shared_ptr<Node>& node) override;
+        std::map<std::shared_ptr<Node>, double> getCurrentCoefficients(const std::shared_ptr<Node>& node, double deltaT) override;
         bool isSource() override { return false; }
         double getVoltage(const std::shared_ptr<Node>& node) override { return getV1() - getV2(); }
-        void refresh(double time) override {}
 
         ~Resistor();
     private:

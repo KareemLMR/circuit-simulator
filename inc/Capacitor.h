@@ -10,11 +10,11 @@ class Capacitor : public TwoTerminal
         Capacitor();
         Capacitor(double c);
 
-        Capacitor(const Capacitor& r);
-        Capacitor(const Capacitor&& r);
+        Capacitor(const Capacitor& c);
+        Capacitor(const Capacitor&& c);
 
-        Capacitor& operator=(const Capacitor& r);
-        Capacitor& operator=(const Capacitor&& r);
+        Capacitor& operator=(const Capacitor& c);
+        Capacitor& operator=(const Capacitor&& c);
 
         double getCapacitance(void);
         double getEquivalentResistance(void);
@@ -25,10 +25,9 @@ class Capacitor : public TwoTerminal
         void setTimestamp(double timestamp);
 
         void calculateCurrent() override;
-        std::map<std::shared_ptr<Node>, double> getCurrentCoefficients(const std::shared_ptr<Node>& node) override;
+        std::map<std::shared_ptr<Node>, double> getCurrentCoefficients(const std::shared_ptr<Node>& node, double deltaT) override;
         bool isSource() override { return false; }
         double getVoltage(const std::shared_ptr<Node>& node) override { return getV1() - getV2(); }
-        void refresh(double time);
 
         ~Capacitor();
     private:

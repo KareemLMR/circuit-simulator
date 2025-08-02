@@ -77,23 +77,33 @@ void Capacitor::calculateCurrent()
     setCurrent(i);
 }
 
-std::map<std::shared_ptr<Node>, double> Capacitor::getCurrentCoefficients(const std::shared_ptr<Node>& node)
+std::map<std::shared_ptr<Node>, double> Capacitor::getCurrentCoefficients(const std::shared_ptr<Node>& node, double deltaT)
 {
     std::map<std::shared_ptr<Node>, double> currentCoefficients;
-    currentCoefficients[node] = 1.0 / m_eqR;
-    if (node == getPins()[0])
+    m_eqR += deltaT / m_c;
+    m_timestamp += deltaT;
+    if (m_eqR != 0)
     {
-        currentCoefficients[getPins()[1]] = -1.0 / m_eqR;
-    }
-    else if (node == getPins()[1])
-    {
-        currentCoefficients[getPins()[0]] = -1.0 / m_eqR;
+        currentCoefficients[node] = 1.0 / m_eqR;
+        if (node == getPins()[0])
+        {
+            currentCoefficients[getPins()[1]] = -1.0 / m_eqR;
+        }
+        else if (node == getPins()[1])
+        {
+            currentCoefficients[getPins()[0]] = -1.0 / m_eqR;
+        }
+        else
+        {
+            std::cout << "Invalid node" << std::endl;
+            return {};
+        }
     }
     else
     {
-        std::cout << "Invalid node" << std::endl;
-        return {};
+        
     }
+    
     return currentCoefficients;
 }
 

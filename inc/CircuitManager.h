@@ -3,6 +3,8 @@
 
 #include "TwoTerminal.h"
 #include "Resistor.h"
+#include "Capacitor.h"
+#include "Inductor.h"
 #include "VoltageSource.h"
 #include <map>
 #include <memory>
@@ -45,12 +47,12 @@ class CircuitManager : public ICircuitManager
         std::map<std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>, double> checkSourcesConnected(const std::shared_ptr<Node>& node,
                                                                                                         std::vector<std::shared_ptr<Device>>& adjacentDevices);
         
-        void calculateCircuitMatrix(void);
+        void calculateCircuitMatrix(double deltaT);
 
         Eigen::MatrixXd convert2DVectorToMatrix(const std::vector<std::vector<double>>& vect);
         std::vector<std::vector<double>> convertMatrixTo2DVector(const Eigen::MatrixXd& matrix);
 
-        void solveCircuit(void) override;
+        void solveCircuit(double deltaT) override;
 
         std::vector<std::vector<double>>& getCircuitMatrix() { return m_circuitMatrix; }
         std::vector<double>& getVoltages() { return m_voltages; }

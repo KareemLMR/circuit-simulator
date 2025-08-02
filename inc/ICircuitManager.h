@@ -29,7 +29,7 @@ class ICircuitManager
 
         virtual bool connect(const std::shared_ptr<Node>& node1, const std::shared_ptr<Node>& node2) = 0;
         virtual bool isConnected(const std::shared_ptr<Node>& node1, const std::shared_ptr<Node>& node2) = 0;
-        virtual void solveCircuit(void) = 0;
+        virtual void solveCircuit(double deltaT) = 0;
         virtual std::pair<std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>> queryDeviceVoltages(std::string deviceName) = 0;
         virtual std::vector<std::vector<double>> queryDeviceCurrents(std::string deviceName) = 0;
 

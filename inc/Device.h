@@ -34,11 +34,10 @@ class Device
 
         virtual void updateDeviceState() = 0;
         virtual void forwardDeviceState() = 0;
-        virtual std::map<std::shared_ptr<Node>, double> getCurrentCoefficients(const std::shared_ptr<Node>& node) = 0;
+        virtual std::map<std::shared_ptr<Node>, double> getCurrentCoefficients(const std::shared_ptr<Node>& node, double deltaT) = 0;
         virtual bool isSource() = 0;
         virtual double getVoltage(const std::shared_ptr<Node>& node) = 0;
         virtual void calculateCurrent() = 0;
-        virtual void refresh(double time) = 0;
 
         virtual ~Device();
 

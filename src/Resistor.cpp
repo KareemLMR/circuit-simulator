@@ -57,7 +57,7 @@ void Resistor::calculateCurrent()
     setCurrent(i);
 }
 
-std::map<std::shared_ptr<Node>, double> Resistor::getCurrentCoefficients(const std::shared_ptr<Node>& node)
+std::map<std::shared_ptr<Node>, double> Resistor::getCurrentCoefficients(const std::shared_ptr<Node>& node, double deltaT)
 {
     std::map<std::shared_ptr<Node>, double> currentCoefficients;
     currentCoefficients[node] = 1.0 / m_r;

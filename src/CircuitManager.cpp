@@ -60,7 +60,27 @@ bool CircuitManager::createDevice(DeviceType type,
             m_devices[deviceCharacteristics.first] = std::move(r);
             break;
         }
+
+        case DeviceType::CAPACITOR:
+        {
+            std::cout << "Creating a capacitor" << std::endl;
+            std::shared_ptr<Capacitor> c = std::make_shared<Capacitor>();
+            c->setName(deviceCharacteristics.first);
+            c->setCapacitance(deviceCharacteristics.second[0]);
+            m_devices[deviceCharacteristics.first] = std::move(c);
+            break;
+        }
         
+        case DeviceType::INDUCTOR:
+        {
+            std::cout << "Creating an inductor" << std::endl;
+            std::shared_ptr<Inductor> l = std::make_shared<Inductor>();
+            l->setName(deviceCharacteristics.first);
+            l->setInductance(deviceCharacteristics.second[0]);
+            m_devices[deviceCharacteristics.first] = std::move(l);
+            break;
+        }
+
         case DeviceType::VOLTAGE_SOURCE:
         {
             std::cout << "Creating a voltage source" << std::endl;
@@ -267,7 +287,7 @@ std::map<std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>, double> Circui
     return sources;
 }
 
-void CircuitManager::calculateCircuitMatrix(void)
+void CircuitManager::calculateCircuitMatrix(double deltaT)
 {
     std::map<std::shared_ptr<Node>, std::vector<double>> circuitMatrix;
     initializeCircuitMatrix(circuitMatrix);
@@ -285,7 +305,7 @@ void CircuitManager::calculateCircuitMatrix(void)
                 for (auto& device : adjacentDevices)
                 {
                     std::shared_ptr<Node> deviceNode = findWhichNodeConnected(node, *device);
-                    std::map<std::shared_ptr<Node>, double> currentCoefficients = device->getCurrentCoefficients(deviceNode);
+                    std::map<std::shared_ptr<Node>, double> currentCoefficients = device->getCurrentCoefficients(deviceNode, deltaT);
                     for (auto& n : currentCoefficients)
                     {
                         std::shared_ptr<Node> foundNode = findWhichNodeConnected(n.first);
@@ -378,9 +398,9 @@ std::vector<std::vector<double>> CircuitManager::convertMatrixTo2DVector(const E
     return vect;
 }
 
-void CircuitManager::solveCircuit(void)
+void CircuitManager::solveCircuit(double deltaT)
 {
-    calculateCircuitMatrix();
+    calculateCircuitMatrix(deltaT);
 
     // Step 3: Map into Eigen::MatrixXd (RowMajor for correct layout)
     Eigen::MatrixXd A = convert2DVectorToMatrix(getCircuitMatrix());
