@@ -80,7 +80,15 @@ void Capacitor::calculateCurrent()
 std::map<std::shared_ptr<Node>, double> Capacitor::getCurrentCoefficients(const std::shared_ptr<Node>& node, double deltaT)
 {
     std::map<std::shared_ptr<Node>, double> currentCoefficients;
-    m_eqR += deltaT / m_c;
+    if (std::abs(m_volt) <= std::abs(getV1() - getV2()))
+    {
+        m_eqR += deltaT / m_c;
+    }
+    else
+    {
+        m_eqR -= deltaT / m_c;
+    }
+    m_volt = getV1() - getV2();
     m_timestamp += deltaT;
     if (m_eqR != 0)
     {

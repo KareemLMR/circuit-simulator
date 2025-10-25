@@ -34,5 +34,6 @@ class Inductor : public TwoTerminal
         double m_l;
         double m_eqG;
         double m_timestamp;
+        double m_volt;
 };
 #endif

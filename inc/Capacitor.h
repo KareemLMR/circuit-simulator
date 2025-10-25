@@ -34,5 +34,6 @@ class Capacitor : public TwoTerminal
         double m_c;
         double m_eqR;
         double m_timestamp;
+        double m_volt;
 };
 #endif

@@ -80,7 +80,16 @@ void Inductor::calculateCurrent()
 std::map<std::shared_ptr<Node>, double> Inductor::getCurrentCoefficients(const std::shared_ptr<Node>& node, double deltaT)
 {
     std::map<std::shared_ptr<Node>, double> currentCoefficients;
-    m_eqG += deltaT / m_l;
+    if (std::abs(m_volt) <= std::abs(getV1() - getV2()))
+    {
+        m_eqG += deltaT / m_l;
+    }
+    else
+    {
+        m_eqG -= deltaT / m_l;
+    }
+    m_volt = getV1() - getV2();
+    
     m_timestamp += deltaT;
     if (m_eqG != 0)
     {
