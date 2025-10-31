@@ -153,10 +153,10 @@ std::set<std::shared_ptr<Node>> CircuitManager::getUniqueNodes(void)
     std::set<std::shared_ptr<Node>> uniqueNodes;
     for (auto& node : m_connected)
     {
-        if (!m_pinOf[node.first]->isSource())
-        {
+        // if (!m_pinOf[node.first]->isSource())
+        // {
             uniqueNodes.insert(node.second);
-        }
+        // }
     }
     return uniqueNodes;
 }
@@ -221,6 +221,7 @@ std::shared_ptr<Node> CircuitManager::findWhichNodeConnected(const std::shared_p
             return n;
         }
     }
+    std::cout << "No node connected to " << node->getName() << std::endl;
     return nullptr;
 }
 
@@ -299,7 +300,6 @@ void CircuitManager::calculateCircuitMatrix(double deltaT)
         {
             auto adjacentDevices = getAdjacentDevices(node);
             auto sourcesMap = checkSourcesConnected(node, adjacentDevices);
-
             if (sourcesMap.empty())
             {
                 for (auto& device : adjacentDevices)
@@ -400,6 +400,7 @@ std::vector<std::vector<double>> CircuitManager::convertMatrixTo2DVector(const E
 
 void CircuitManager::solveCircuit(double deltaT)
 {
+    // Step 1: Calculate the circuit matrix
     calculateCircuitMatrix(deltaT);
 
     // Step 3: Map into Eigen::MatrixXd (RowMajor for correct layout)
@@ -423,42 +424,70 @@ void CircuitManager::solveCircuit(double deltaT)
     for (auto& device : m_devices)
     {
         device.second->forwardDeviceState();
-        device.second->calculateCurrent();
+        device.second->calculateCurrent(deltaT);
     }
 
-    //TODO: Check this logic again for multiple sources connected.
+    // Clear sources currents first.
     for (auto& device : m_devices)
     {
-        Eigen::MatrixXd currentMatrix(2, 2);
-        currentMatrix << 0.0, 0.0,
-                         0.0, 0.0;
         if (device.second->isSource())
         {
-            for (auto& adjDevice : getAdjacentDevices(device.second->getPins()[0]))
+            for (auto& pin : device.second->getPins())
             {
-                if (adjDevice != device.second)
+                auto& deviceCurrents = device.second->getCurrents();
+                deviceCurrents[pin] = 0.0;
+            }
+        }
+    }
+    for (auto& device : m_devices)
+    {
+        if (!device.second->isSource())
+        {
+            for (auto& pin : device.second->getPins())
+            {
+                for (auto& adjDevice : getAdjacentDevices(pin))
                 {
-                    std::vector<std::vector<double>> adjCurrents = adjDevice->getCurrents();
-                    Eigen::MatrixXd adjCurrentsMatrix;
-                    if (adjCurrents.size() == 2 && adjCurrents[0].size() == 2 && adjCurrents[1].size() == 2)
+                    if (adjDevice->isSource())
                     {
-                        adjCurrentsMatrix = convert2DVectorToMatrix(adjCurrents);
+                        auto& adjDeviceCurrents = adjDevice->getCurrents();
+                        auto connectedPin = findWhichNodeConnected(pin, *adjDevice);
+                        adjDeviceCurrents[connectedPin] += device.second->getCurrents()[pin];
+                        adjDevice->routeCurrents(connectedPin);
                     }
-                    else
-                    {
-                        std::shared_ptr<Node> connectedNode = findWhichNodeConnected(device.second->getPins()[0], *adjDevice);
-                        int nodeIndex = getDeviceNodeIndex(connectedNode, *adjDevice);
-
-                        adjCurrentsMatrix = convert2DVectorToMatrix(adjCurrents);
-                        adjCurrentsMatrix << 0.0, adjCurrentsMatrix.row(nodeIndex).sum(),
-                                            adjCurrentsMatrix.col(nodeIndex).sum(), 0.0;
-                    }
-                    currentMatrix += adjCurrentsMatrix;
                 }
             }
         }
-        std::vector<std::vector<double>> currents = convertMatrixTo2DVector(currentMatrix);
-        device.second->setCurrents(currents);
+    }
+    for (auto& device : m_devices)
+    {
+        if (device.second->isSource())
+        {
+            bool innerSource = true;
+            for (auto& pin : device.second->getPins())
+            {
+                for (auto& adjDevice : getAdjacentDevices(pin))
+                {
+                    if (!adjDevice->isSource())
+                    {
+                        innerSource = false;
+                        break;
+                    }
+                }
+            }
+            if (innerSource)
+            {
+                for (auto& pin : device.second->getPins())
+                {
+                    for (auto& adjDevice : getAdjacentDevices(pin))
+                    {
+                        auto& adjDeviceCurrents = adjDevice->getCurrents();
+                        auto connectedPin = findWhichNodeConnected(pin, *adjDevice);
+                        adjDeviceCurrents[connectedPin] += device.second->getCurrents()[pin];
+                        adjDevice->routeCurrents(connectedPin);
+                    }
+                }
+            }
+        }
     }
     m_circuitMatrix.clear();
     m_voltages.clear();
@@ -479,7 +508,7 @@ std::pair<std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>> CircuitMana
     }
 }
 
-std::vector<std::vector<double>> CircuitManager::queryDeviceCurrents(std::string deviceName)
+std::map<std::shared_ptr<Node>, double> CircuitManager::queryDeviceCurrents(std::string deviceName)
 {
     if (m_devices.find(deviceName) != m_devices.end())
     {
@@ -493,4 +522,5 @@ std::vector<std::vector<double>> CircuitManager::queryDeviceCurrents(std::string
 
 CircuitManager::~CircuitManager()
 {
+
 }

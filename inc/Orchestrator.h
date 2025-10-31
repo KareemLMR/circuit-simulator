@@ -33,7 +33,7 @@ class Orchestrator
         double m_circuitRefreshFrequency;
         std::thread m_userInterfaceThread;
         ICircuitManager* m_circuitManager;
-        std::atomic<bool> m_isInitialized = false;
+        std::atomic<bool> m_isInitialized;
 };
 
 #endif

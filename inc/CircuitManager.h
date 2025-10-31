@@ -58,7 +58,7 @@ class CircuitManager : public ICircuitManager
         std::vector<double>& getVoltages() { return m_voltages; }
         
         std::pair<std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>> queryDeviceVoltages(std::string deviceName) override;
-        std::vector<std::vector<double>> queryDeviceCurrents(std::string deviceName) override;
+        std::map<std::shared_ptr<Node>, double> queryDeviceCurrents(std::string deviceName) override;
 
         ~CircuitManager();
 

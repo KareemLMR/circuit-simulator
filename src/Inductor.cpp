@@ -2,21 +2,22 @@
 
 Inductor::Inductor() : TwoTerminal(), m_l(0), m_eqG(0), m_timestamp(0)
 {
-
+    m_type = DeviceType::INDUCTOR;
 }
 
 Inductor::Inductor(double l) : TwoTerminal(), m_l(l), m_eqG(0), m_timestamp(0)
 {
-    
+    m_type = DeviceType::INDUCTOR;
 }
 
 Inductor::Inductor(const Inductor& l) : TwoTerminal(l), m_l(l.getInductance())
 {
-
+    m_type = DeviceType::INDUCTOR;
 }
 
 Inductor::Inductor(const Inductor&& l) : TwoTerminal(std::move(l)), m_l(l.getInductance())
 {
+    m_type = DeviceType::INDUCTOR;
     l.setInductance(0);
 }
 
@@ -26,6 +27,7 @@ Inductor& Inductor::operator=(const Inductor& l)
     {
         TwoTerminal::operator=(l);
         m_l = l.getInductance();
+        m_type = DeviceType::INDUCTOR;
     }
     return *this;
 }
@@ -35,6 +37,7 @@ Inductor& Inductor::operator=(const Inductor&& l)
     TwoTerminal::operator=(std::move(l));
     m_l = l.getInductance();
     l.setInductance(0);
+    m_type = DeviceType::INDUCTOR;
     return *this;
 }
 
@@ -68,7 +71,7 @@ void Inductor::setTimestamp(double timestamp)
     m_timestamp = timestamp;
 }
 
-void Inductor::calculateCurrent()
+void Inductor::calculateCurrent(double deltaT)
 {
     double v1 = getV1();
     double v2 = getV2();

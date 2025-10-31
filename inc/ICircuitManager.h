@@ -6,17 +6,6 @@
 #include <vector>
 #include "Device.h"
 
-enum class DeviceType
-{
-    RESISTOR,
-    CAPACITOR,
-    INDUCTOR,
-    DIODE,
-    TRANSISTOR,
-    VOLTAGE_SOURCE,
-    CURRENT_SOURCE
-};
-
 class ICircuitManager
 {
     public:
@@ -31,7 +20,7 @@ class ICircuitManager
         virtual bool isConnected(const std::shared_ptr<Node>& node1, const std::shared_ptr<Node>& node2) = 0;
         virtual void solveCircuit(double deltaT) = 0;
         virtual std::pair<std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>> queryDeviceVoltages(std::string deviceName) = 0;
-        virtual std::vector<std::vector<double>> queryDeviceCurrents(std::string deviceName) = 0;
+        virtual std::map<std::shared_ptr<Node>, double> queryDeviceCurrents(std::string deviceName) = 0;
 
 };
 

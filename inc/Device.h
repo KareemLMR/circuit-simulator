@@ -6,6 +6,17 @@
 #include <map>
 #include <memory>
 
+enum class DeviceType
+{
+    RESISTOR,
+    CAPACITOR,
+    INDUCTOR,
+    DIODE,
+    TRANSISTOR,
+    VOLTAGE_SOURCE,
+    CURRENT_SOURCE
+};
+
 class Device
 {
     public:
@@ -24,28 +35,34 @@ class Device
         void setNumOfTerminals(int terminals);
         void setPins(const std::vector<std::shared_ptr<Node>>& pins);
         void setPins(std::vector<std::shared_ptr<Node>>&& pins);
-        void setCurrents(const std::vector<std::vector<double>>& currents);
-        void setCurrents(std::vector<std::vector<double>>&& currents);
+        void setCurrents(const std::map<std::shared_ptr<Node>, double>& currents);
+        void setCurrents(std::map<std::shared_ptr<Node>, double>&& currents);
 
         std::string getName(void);
         int getNumOfTerminals(void);
         std::vector<std::shared_ptr<Node>>& getPins(void);
-        std::vector<std::vector<double>>& getCurrents(void);
+        std::map<std::shared_ptr<Node>, double>& getCurrents(void);
+
+        DeviceType getDeviceType(void);
 
         virtual void updateDeviceState() = 0;
         virtual void forwardDeviceState() = 0;
         virtual std::map<std::shared_ptr<Node>, double> getCurrentCoefficients(const std::shared_ptr<Node>& node, double deltaT) = 0;
         virtual bool isSource() = 0;
         virtual double getVoltage(const std::shared_ptr<Node>& node) = 0;
-        virtual void calculateCurrent() = 0;
+        virtual void calculateCurrent(double deltaT) = 0;
+        virtual void routeCurrents(std::shared_ptr<Node> node) = 0;
 
         virtual ~Device();
+
+    protected:
+        DeviceType m_type;
 
     private:
         std::string m_name;
         int m_terminals;
         std::vector<std::shared_ptr<Node>> m_pins;
-        std::vector<std::vector<double>> m_currents;
+        std::map<std::shared_ptr<Node>, double> m_currents;
         static int m_counter;
 };
 

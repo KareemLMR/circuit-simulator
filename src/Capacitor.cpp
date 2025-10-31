@@ -2,21 +2,22 @@
 
 Capacitor::Capacitor() : TwoTerminal(), m_c(0), m_eqR(0), m_timestamp(0)
 {
-
+    m_type = DeviceType::CAPACITOR;
 }
 
 Capacitor::Capacitor(double c) : TwoTerminal(), m_c(c), m_eqR(0), m_timestamp(0)
 {
-    
+    m_type = DeviceType::CAPACITOR;
 }
 
 Capacitor::Capacitor(const Capacitor& c) : TwoTerminal(c), m_c(c.getCapacitance())
 {
-
+    m_type = DeviceType::CAPACITOR;
 }
 
 Capacitor::Capacitor(const Capacitor&& c) : TwoTerminal(std::move(c)), m_c(c.getCapacitance())
 {
+    m_type = DeviceType::CAPACITOR;
     c.setCapacitance(0);
 }
 
@@ -26,6 +27,7 @@ Capacitor& Capacitor::operator=(const Capacitor& c)
     {
         TwoTerminal::operator=(c);
         m_c = c.getCapacitance();
+        m_type = DeviceType::CAPACITOR;
     }
     return *this;
 }
@@ -35,6 +37,7 @@ Capacitor& Capacitor::operator=(const Capacitor&& c)
     TwoTerminal::operator=(std::move(c));
     m_c = c.getCapacitance();
     c.setCapacitance(0);
+    m_type = DeviceType::CAPACITOR;
     return *this;
 }
 
@@ -68,50 +71,38 @@ void Capacitor::setTimestamp(double timestamp)
     m_timestamp = timestamp;
 }
 
-void Capacitor::calculateCurrent()
+double Capacitor::getVoltage(const std::shared_ptr<Node>& node)
 {
-    double v1 = getV1();
-    double v2 = getV2();
+    double ret = 0.0;
+    if (node == getPins()[0])
+    {
+        ret = m_v;
+    }
+    else if (node == getPins()[1])
+    {
+        ret = -m_v;
+    }
+    else
+    {
+        std::cout << "getVoltage: Invalid node" << std::endl;
+        ret = 0.0;
+    }
 
-    double i = (v1 - v2) / m_eqR;
-    setCurrent(i);
+    return ret;
+}
+
+
+void Capacitor::calculateCurrent(double deltaT)
+{
+    auto& currents = getCurrents();
+    double i = currents[getPins()[0]];
+
+    m_v += i * deltaT / m_c;
 }
 
 std::map<std::shared_ptr<Node>, double> Capacitor::getCurrentCoefficients(const std::shared_ptr<Node>& node, double deltaT)
 {
     std::map<std::shared_ptr<Node>, double> currentCoefficients;
-    if (std::abs(m_volt) <= std::abs(getV1() - getV2()))
-    {
-        m_eqR += deltaT / m_c;
-    }
-    else
-    {
-        m_eqR -= deltaT / m_c;
-    }
-    m_volt = getV1() - getV2();
-    m_timestamp += deltaT;
-    if (m_eqR != 0)
-    {
-        currentCoefficients[node] = 1.0 / m_eqR;
-        if (node == getPins()[0])
-        {
-            currentCoefficients[getPins()[1]] = -1.0 / m_eqR;
-        }
-        else if (node == getPins()[1])
-        {
-            currentCoefficients[getPins()[0]] = -1.0 / m_eqR;
-        }
-        else
-        {
-            std::cout << "Invalid node" << std::endl;
-            return {};
-        }
-    }
-    else
-    {
-        
-    }
-    
     return currentCoefficients;
 }
 

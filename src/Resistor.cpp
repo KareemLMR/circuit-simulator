@@ -2,21 +2,22 @@
 
 Resistor::Resistor() : TwoTerminal(), m_r(0)
 {
-
+    m_type = DeviceType::RESISTOR;
 }
 
 Resistor::Resistor(double r) : TwoTerminal(), m_r(r)
 {
-    
+    m_type = DeviceType::RESISTOR;
 }
 
 Resistor::Resistor(const Resistor& r) : TwoTerminal(r), m_r(r.getResistance())
 {
-
+    m_type = DeviceType::RESISTOR;
 }
 
 Resistor::Resistor(const Resistor&& r) : TwoTerminal(std::move(r)), m_r(r.getResistance())
 {
+    m_type = DeviceType::RESISTOR;
     r.setResistance(0);
 }
 
@@ -26,6 +27,7 @@ Resistor& Resistor::operator=(const Resistor& r)
     {
         TwoTerminal::operator=(r);
         m_r = r.getResistance();
+        m_type = DeviceType::RESISTOR;
     }
     return *this;
 }
@@ -35,6 +37,7 @@ Resistor& Resistor::operator=(const Resistor&& r)
     TwoTerminal::operator=(std::move(r));
     m_r = r.getResistance();
     r.setResistance(0);
+    m_type = DeviceType::RESISTOR;
     return *this;
 }
 
@@ -48,8 +51,9 @@ void Resistor::setResistance(double r)
     m_r = r;
 }
 
-void Resistor::calculateCurrent()
+void Resistor::calculateCurrent(double deltaT)
 {
+    std::cout << "Calculating current for resistor" << std::endl;
     double v1 = getV1();
     double v2 = getV2();
 

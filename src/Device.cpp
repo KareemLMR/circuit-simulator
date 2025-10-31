@@ -18,13 +18,9 @@ Device::Device(int terminals) : m_name("dev" + std::to_string(m_counter++)), m_t
     {
         m_pins.push_back(std::make_shared<Node>());
     }
-    for (int i = 0 ; i < terminals ; i++)
+    for (auto& pin : m_pins)
     {
-        m_currents.push_back(std::vector<double>());
-        for (int j = 0 ; j < terminals ; j++)
-        {
-            m_currents[i].push_back(0.0);
-        }
+        m_currents[pin] = 0.0;
     }
 }
 
@@ -34,13 +30,9 @@ Device::Device(std::string name, int terminals) : m_name(name), m_terminals(term
     {
         m_pins.push_back(std::make_shared<Node>());
     }
-    for (int i = 0 ; i < terminals ; i++)
+    for (auto& pin : m_pins)
     {
-        m_currents.push_back(std::vector<double>());
-        for (int j = 0 ; j < terminals ; j++)
-        {
-            m_currents[i].push_back(0.0);
-        }
+        m_currents[pin] = 0.0;
     }
 }
 
@@ -116,12 +108,12 @@ void Device::setPins(std::vector<std::shared_ptr<Node>> && pins)
     m_pins = std::move(pins);
 }
 
-void Device::setCurrents(const std::vector<std::vector<double>>& currents)
+void Device::setCurrents(const std::map<std::shared_ptr<Node>, double>& currents)
 {
     m_currents = currents;
 }
 
-void Device::setCurrents(std::vector<std::vector<double>>&& currents)
+void Device::setCurrents(std::map<std::shared_ptr<Node>, double>&& currents)
 {
     m_currents = std::move(currents);
 }
@@ -141,9 +133,14 @@ std::vector<std::shared_ptr<Node>>& Device::getPins(void)
     return m_pins;
 }
 
-std::vector<std::vector<double>>& Device::getCurrents(void)
+std::map<std::shared_ptr<Node>, double>& Device::getCurrents(void)
 {
     return m_currents;
+}
+
+DeviceType Device::getDeviceType(void)
+{
+    return m_type;
 }
 
 Device::~Device()

@@ -24,7 +24,7 @@ class Inductor : public TwoTerminal
         void setEquivalentConductance(double eqG);
         void setTimestamp(double timestamp);
 
-        void calculateCurrent() override;
+        void calculateCurrent(double deltaT) override;
         std::map<std::shared_ptr<Node>, double> getCurrentCoefficients(const std::shared_ptr<Node>& node, double deltaT) override;
         bool isSource() override { return false; }
         double getVoltage(const std::shared_ptr<Node>& node) override { return getV1() - getV2(); }

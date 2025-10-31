@@ -20,7 +20,7 @@ class VoltageSource : public TwoTerminal
 
         bool isSource() override { return true; }
         std::map<std::shared_ptr<Node>, double> getCurrentCoefficients(const std::shared_ptr<Node>& node, double deltaT) override { return {}; };
-        void calculateCurrent() override {};
+        void calculateCurrent(double deltaT) override {};
 
         double getVoltage(const std::shared_ptr<Node>& node) override;
         void setVoltage(double v);
@@ -33,4 +33,3 @@ class VoltageSource : public TwoTerminal
 };
 
 #endif
-

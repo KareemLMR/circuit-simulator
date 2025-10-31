@@ -102,9 +102,9 @@ std::function<double(double, double)>  TwoTerminal::getTransferFunction(void)
 
 void TwoTerminal::updateDeviceState()
 {
-    std::vector<std::vector<double>>& currents = getCurrents();
-    currents[0][1] = m_i;
-    currents[1][0] = -1.0 * m_i;
+    std::map<std::shared_ptr<Node>, double>& currents = getCurrents();
+    currents[getPins()[0]] = m_i;
+    currents[getPins()[1]] = m_i;
 }
 
 void TwoTerminal::forwardDeviceState()
@@ -112,6 +112,24 @@ void TwoTerminal::forwardDeviceState()
     std::vector<std::shared_ptr<Node>>& nodes = getPins();
     setV1(nodes[0]->getVolt());
     setV2(nodes[1]->getVolt());
+}
+
+void TwoTerminal::routeCurrents(std::shared_ptr<Node> node)
+{
+    std::map<std::shared_ptr<Node>, double>& currents = getCurrents();
+    std::vector<std::shared_ptr<Node>>& nodes = getPins();
+    if (node == nodes[0])
+    {
+        currents[nodes[1]] = currents[nodes[0]];
+    }
+    else if (node == nodes[1])
+    {
+        currents[nodes[0]] = currents[nodes[1]];
+    }
+    else
+    {
+        std::cout << "Invalid node!" << std::endl;
+    }
 }
 
 TwoTerminal::~TwoTerminal()

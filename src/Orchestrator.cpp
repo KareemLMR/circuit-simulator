@@ -78,14 +78,10 @@ void Orchestrator::orchestrate(void)
             std::cout << node->getVolt() << std::endl;
         }
 
-        // for (auto& path : m_circuitManager->queryDeviceCurrents("V"))
-        // {
-        //     for (double current : path)
-        //     {
-        //         std::cout << current << " ";
-        //     }
-        //     std::cout << std::endl;
-        // }
+        for (auto& path : m_circuitManager->queryDeviceCurrents("c1"))
+        {
+            std::cout << "Node " << path.first->getName() << " current = " << path.second << std::endl;
+        }
         std::chrono::duration<double> sleep_time(1.0 / m_userInterfaceClockFrequency);
         std::this_thread::sleep_for(sleep_time);
     }
@@ -96,4 +92,3 @@ Orchestrator::~Orchestrator()
 {
     
 }
-

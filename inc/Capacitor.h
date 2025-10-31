@@ -3,6 +3,7 @@
 
 #include "TwoTerminal.h"
 #include <iostream>
+#include <math.h>
 
 class Capacitor : public TwoTerminal
 {
@@ -24,16 +25,16 @@ class Capacitor : public TwoTerminal
         void setEquivalentResistance(double eqR);
         void setTimestamp(double timestamp);
 
-        void calculateCurrent() override;
+        void calculateCurrent(double deltaT) override;
         std::map<std::shared_ptr<Node>, double> getCurrentCoefficients(const std::shared_ptr<Node>& node, double deltaT) override;
-        bool isSource() override { return false; }
-        double getVoltage(const std::shared_ptr<Node>& node) override { return getV1() - getV2(); }
+        bool isSource() override { return true; }
+        double getVoltage(const std::shared_ptr<Node>& node) override;
 
         ~Capacitor();
     private:
         double m_c;
         double m_eqR;
         double m_timestamp;
-        double m_volt;
+        double m_v;
 };
 #endif

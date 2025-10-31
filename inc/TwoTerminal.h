@@ -2,6 +2,7 @@
 #define TWO_TERMINAL_H_
 
 #include "Device.h"
+#include <iostream>
 #include <functional>
 
 class TwoTerminal : public Device
@@ -27,6 +28,7 @@ class TwoTerminal : public Device
 
         void updateDeviceState() override;
         void forwardDeviceState() override;
+        void routeCurrents(std::shared_ptr<Node> node) override;
 
         virtual ~TwoTerminal();
 
