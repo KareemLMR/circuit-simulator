@@ -71,28 +71,7 @@ void Capacitor::setTimestamp(double timestamp)
     m_timestamp = timestamp;
 }
 
-double Capacitor::getVoltage(const std::shared_ptr<Node>& node)
-{
-    double ret = 0.0;
-    if (node == getPins()[0])
-    {
-        ret = m_v;
-    }
-    else if (node == getPins()[1])
-    {
-        ret = -m_v;
-    }
-    else
-    {
-        std::cout << "getVoltage: Invalid node" << std::endl;
-        ret = 0.0;
-    }
-
-    return ret;
-}
-
-
-void Capacitor::calculateCurrent(double deltaT)
+void Capacitor::prepareForNextStep(double deltaT)
 {
     auto& currents = getCurrents();
     double i = currents[getPins()[0]];

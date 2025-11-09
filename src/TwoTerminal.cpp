@@ -132,6 +132,50 @@ void TwoTerminal::routeCurrents(std::shared_ptr<Node> node)
     }
 }
 
+double TwoTerminal::getVoltage(const std::shared_ptr<Node>& node)
+{
+    if (node == getPins()[0])
+    {
+        return m_v;
+    }
+    else if (node == getPins()[1])
+    {
+        return -m_v;
+    }
+    else
+    {
+        std::cout << "getVoltage: Invalid node" << std::endl;
+        return 0.0;
+    }
+}
+
+double TwoTerminal::getVoltage()
+{
+    return m_v;
+}
+
+void TwoTerminal::setVoltage(double v)
+{
+    m_v = v;
+}
+
+double TwoTerminal::getCurrent(const std::shared_ptr<Node>& node)
+{
+    if (node == getPins()[0])
+    {
+        return m_i;
+    }
+    else if (node == getPins()[1])
+    {
+        return -m_i;
+    }
+    else
+    {
+        std::cout << "getCurrent: Invalid node" << std::endl;
+        return 0.0;
+    }
+}
+
 TwoTerminal::~TwoTerminal()
 {
     m_transferFunction = nullptr;

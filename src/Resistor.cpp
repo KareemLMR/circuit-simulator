@@ -51,7 +51,7 @@ void Resistor::setResistance(double r)
     m_r = r;
 }
 
-void Resistor::calculateCurrent(double deltaT)
+void Resistor::prepareForNextStep(double deltaT)
 {
     std::cout << "Calculating current for resistor" << std::endl;
     double v1 = getV1();

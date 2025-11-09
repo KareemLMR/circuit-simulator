@@ -90,6 +90,16 @@ bool CircuitManager::createDevice(DeviceType type,
             m_devices[deviceCharacteristics.first] = std::move(vs);
             break;
         }
+
+        case DeviceType::CURRENT_SOURCE:
+        {
+            std::cout << "Creating a current source" << std::endl;
+            std::shared_ptr<CurrentSource> is = std::make_shared<CurrentSource>();
+            is->setName(deviceCharacteristics.first);
+            is->setCurrent(deviceCharacteristics.second[0]);
+            m_devices[deviceCharacteristics.first] = std::move(is);
+            break;
+        }
             
         default:
             std::cout << "Invalid device type" << std::endl;
@@ -153,7 +163,7 @@ std::set<std::shared_ptr<Node>> CircuitManager::getUniqueNodes(void)
     std::set<std::shared_ptr<Node>> uniqueNodes;
     for (auto& node : m_connected)
     {
-        // if (!m_pinOf[node.first]->isSource())
+        // if (!m_pinOf[node.first]->isVoltageSupply())
         // {
             uniqueNodes.insert(node.second);
         // }
@@ -244,7 +254,7 @@ std::map<std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>, double> Circui
     std::map<std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>, double> sources;
     for (auto& device : adjacentDevices)
     {
-        if (device->isSource())
+        if (device->isVoltageSupply())
         {
             std::shared_ptr<Node> sourceNode1 = findWhichNodeConnected(node, *device);
             std::shared_ptr<Node> sourceNode2;
@@ -269,7 +279,7 @@ std::map<std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>, double> Circui
     std::map<std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>, double> sources;
     for (auto& device : adjacentDevices)
     {
-        if (device->isSource())
+        if (device->isVoltageSupply())
         {
             std::shared_ptr<Node> sourceNode1 = findWhichNodeConnected(node, *device);
             std::shared_ptr<Node> sourceNode2;
@@ -302,24 +312,32 @@ void CircuitManager::calculateCircuitMatrix(double deltaT)
             auto sourcesMap = checkSourcesConnected(node, adjacentDevices);
             if (sourcesMap.empty())
             {
+                double knownIndependentCurrents = 0.0;
                 for (auto& device : adjacentDevices)
                 {
                     std::shared_ptr<Node> deviceNode = findWhichNodeConnected(node, *device);
-                    std::map<std::shared_ptr<Node>, double> currentCoefficients = device->getCurrentCoefficients(deviceNode, deltaT);
-                    for (auto& n : currentCoefficients)
+                    if (device->isCurrentSupply())
                     {
-                        std::shared_ptr<Node> foundNode = findWhichNodeConnected(n.first);
-                        if (foundNode != nullptr)
+                        knownIndependentCurrents += device->getCurrent(deviceNode);
+                    }
+                    else
+                    {
+                        std::map<std::shared_ptr<Node>, double> currentCoefficients = device->getCurrentCoefficients(deviceNode, deltaT);
+                        for (auto& n : currentCoefficients)
                         {
-                            circuitMatrix[foundNode][index] += n.second;
-                        }
-                        else
-                        {
-                            std::cout << "Invalid node found! " << n.first->getName() << std::endl;
+                            std::shared_ptr<Node> foundNode = findWhichNodeConnected(n.first);
+                            if (foundNode != nullptr)
+                            {
+                                circuitMatrix[foundNode][index] += n.second;
+                            }
+                            else
+                            {
+                                std::cout << "Invalid node found! " << n.first->getName() << std::endl;
+                            }
                         }
                     }
                 }
-                m_voltages[index] = 0.0;
+                m_voltages[index] = knownIndependentCurrents;
             }
             else
             {
@@ -403,6 +421,21 @@ void CircuitManager::solveCircuit(double deltaT)
     // Step 1: Calculate the circuit matrix
     calculateCircuitMatrix(deltaT);
 
+    for (auto& row : m_circuitMatrix)
+    {
+        for (auto e : row)
+        {
+            std::cout << e << " ";
+        }
+        std::cout << std::endl;
+    }
+
+    for (auto e : m_voltages)
+    {
+        std::cout << e << " ";
+    }
+    std::cout << std::endl;
+
     // Step 3: Map into Eigen::MatrixXd (RowMajor for correct layout)
     Eigen::MatrixXd A = convert2DVectorToMatrix(getCircuitMatrix());
     
@@ -424,13 +457,13 @@ void CircuitManager::solveCircuit(double deltaT)
     for (auto& device : m_devices)
     {
         device.second->forwardDeviceState();
-        device.second->calculateCurrent(deltaT);
+        device.second->prepareForNextStep(deltaT);
     }
 
     // Clear sources currents first.
     for (auto& device : m_devices)
     {
-        if (device.second->isSource())
+        if (device.second->isVoltageSupply())
         {
             for (auto& pin : device.second->getPins())
             {
@@ -441,13 +474,13 @@ void CircuitManager::solveCircuit(double deltaT)
     }
     for (auto& device : m_devices)
     {
-        if (!device.second->isSource())
+        if (!device.second->isVoltageSupply())
         {
             for (auto& pin : device.second->getPins())
             {
                 for (auto& adjDevice : getAdjacentDevices(pin))
                 {
-                    if (adjDevice->isSource())
+                    if (adjDevice->isVoltageSupply())
                     {
                         auto& adjDeviceCurrents = adjDevice->getCurrents();
                         auto connectedPin = findWhichNodeConnected(pin, *adjDevice);
@@ -460,14 +493,14 @@ void CircuitManager::solveCircuit(double deltaT)
     }
     for (auto& device : m_devices)
     {
-        if (device.second->isSource())
+        if (device.second->isVoltageSupply())
         {
             bool innerSource = true;
             for (auto& pin : device.second->getPins())
             {
                 for (auto& adjDevice : getAdjacentDevices(pin))
                 {
-                    if (!adjDevice->isSource())
+                    if (!adjDevice->isVoltageSupply())
                     {
                         innerSource = false;
                         break;

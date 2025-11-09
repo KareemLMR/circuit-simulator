@@ -25,16 +25,15 @@ class Capacitor : public TwoTerminal
         void setEquivalentResistance(double eqR);
         void setTimestamp(double timestamp);
 
-        void calculateCurrent(double deltaT) override;
+        void prepareForNextStep(double deltaT) override;
         std::map<std::shared_ptr<Node>, double> getCurrentCoefficients(const std::shared_ptr<Node>& node, double deltaT) override;
-        bool isSource() override { return true; }
-        double getVoltage(const std::shared_ptr<Node>& node) override;
+        bool isVoltageSupply() override { return true; }
+        bool isCurrentSupply() override { return false; }
 
         ~Capacitor();
     private:
         double m_c;
         double m_eqR;
         double m_timestamp;
-        double m_v;
 };
 #endif

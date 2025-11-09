@@ -29,11 +29,18 @@ class TwoTerminal : public Device
         void updateDeviceState() override;
         void forwardDeviceState() override;
         void routeCurrents(std::shared_ptr<Node> node) override;
+        double getVoltage(const std::shared_ptr<Node>& node) override;
+        double getVoltage(void);
+        void setVoltage(double v);
+        double getCurrent(const std::shared_ptr<Node>& node) override;
 
         virtual ~TwoTerminal();
 
+    protected:
+        double m_v, m_i;
+
     private:
-        double m_v1, m_v2, m_i;
+        double m_v1, m_v2;
         std::function<double(double, double)> m_transferFunction;
 };
 

@@ -6,6 +6,7 @@
 #include "Capacitor.h"
 #include "Inductor.h"
 #include "VoltageSource.h"
+#include "CurrentSource.h"
 #include <map>
 #include <memory>
 #include <set>

@@ -71,51 +71,15 @@ void Inductor::setTimestamp(double timestamp)
     m_timestamp = timestamp;
 }
 
-void Inductor::calculateCurrent(double deltaT)
+void Inductor::prepareForNextStep(double deltaT)
 {
-    double v1 = getV1();
-    double v2 = getV2();
-
-    double i = (v1 - v2) / m_eqG;
-    setCurrent(i);
+    double v = getVoltage();
+    m_i += v * deltaT / m_l;
 }
 
 std::map<std::shared_ptr<Node>, double> Inductor::getCurrentCoefficients(const std::shared_ptr<Node>& node, double deltaT)
 {
     std::map<std::shared_ptr<Node>, double> currentCoefficients;
-    if (std::abs(m_volt) <= std::abs(getV1() - getV2()))
-    {
-        m_eqG += deltaT / m_l;
-    }
-    else
-    {
-        m_eqG -= deltaT / m_l;
-    }
-    m_volt = getV1() - getV2();
-    
-    m_timestamp += deltaT;
-    if (m_eqG != 0)
-    {
-        currentCoefficients[node] = m_eqG;
-        if (node == getPins()[0])
-        {
-            currentCoefficients[getPins()[1]] = -m_eqG;
-        }
-        else if (node == getPins()[1])
-        {
-            currentCoefficients[getPins()[0]] = -m_eqG;
-        }
-        else
-        {
-            std::cout << "Invalid node" << std::endl;
-            return {};
-        }
-    }
-    else
-    {
-        
-    }
-    
     return currentCoefficients;
 }
 
