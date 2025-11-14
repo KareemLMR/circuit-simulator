@@ -73,8 +73,12 @@ void Inductor::setTimestamp(double timestamp)
 
 void Inductor::prepareForNextStep(double deltaT)
 {
-    double v = getVoltage();
-    m_i += v * deltaT / m_l;
+    double v1 = getV1();
+    m_i -= v1 * deltaT / m_l;
+    std::map<std::shared_ptr<Node>, double>& currents = getCurrents();
+    std::vector<std::shared_ptr<Node>>& nodes = getPins();
+    currents[nodes[0]] = m_i;
+    currents[nodes[1]] = m_i;
 }
 
 std::map<std::shared_ptr<Node>, double> Inductor::getCurrentCoefficients(const std::shared_ptr<Node>& node, double deltaT)
