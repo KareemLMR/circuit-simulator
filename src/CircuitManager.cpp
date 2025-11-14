@@ -116,6 +116,7 @@ bool CircuitManager::createDevice(DeviceType type,
         m_connected[node] = node;
         index++;
     }
+    m_devices[deviceCharacteristics.first]->updateDeviceState();
     return true;
 }
 
