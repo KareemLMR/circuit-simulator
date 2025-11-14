@@ -1,11 +1,11 @@
 #include "Inductor.h"
 
-Inductor::Inductor() : TwoTerminal(), m_l(0), m_eqG(0), m_timestamp(0)
+Inductor::Inductor() : m_l(0), m_eqG(0), m_timestamp(0)
 {
     m_type = DeviceType::INDUCTOR;
 }
 
-Inductor::Inductor(double l) : TwoTerminal(), m_l(l), m_eqG(0), m_timestamp(0)
+Inductor::Inductor(double l) : m_l(l), m_eqG(0), m_timestamp(0)
 {
     m_type = DeviceType::INDUCTOR;
 }

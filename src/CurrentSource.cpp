@@ -1,12 +1,12 @@
 #include "CurrentSource.h"
 
-CurrentSource::CurrentSource() : TwoTerminal()
+CurrentSource::CurrentSource()
 {
     setCurrent(0.0);
     m_type = DeviceType::CURRENT_SOURCE;
 }
 
-CurrentSource::CurrentSource(double i) : TwoTerminal()
+CurrentSource::CurrentSource(double i)
 {
     setCurrent(i);
     m_type = DeviceType::CURRENT_SOURCE;

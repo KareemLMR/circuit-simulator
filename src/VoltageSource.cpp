@@ -1,11 +1,11 @@
 #include "VoltageSource.h"
 
-VoltageSource::VoltageSource() : TwoTerminal()
+VoltageSource::VoltageSource()
 {
     m_type = DeviceType::VOLTAGE_SOURCE;
 }
 
-VoltageSource::VoltageSource(double v) : TwoTerminal()
+VoltageSource::VoltageSource(double v)
 {
     setVoltage(v);
     m_type = DeviceType::VOLTAGE_SOURCE;

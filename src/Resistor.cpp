@@ -1,11 +1,11 @@
 #include "Resistor.h"
 
-Resistor::Resistor() : TwoTerminal(), m_r(0)
+Resistor::Resistor() : m_r(0)
 {
     m_type = DeviceType::RESISTOR;
 }
 
-Resistor::Resistor(double r) : TwoTerminal(), m_r(r)
+Resistor::Resistor(double r) : m_r(r)
 {
     m_type = DeviceType::RESISTOR;
 }

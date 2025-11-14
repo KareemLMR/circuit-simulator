@@ -50,35 +50,35 @@ int main()
     // cm.connect(I1, R1);
     // cm.connect(I2, R2);
 
-    // std::shared_ptr<Node> R1 = std::make_shared<Node>(Node("R1"));
-    // std::shared_ptr<Node> R2 = std::make_shared<Node>(Node("R2"));
-    // std::shared_ptr<Node> C1 = std::make_shared<Node>(Node("C1"));
-    // std::shared_ptr<Node> C2 = std::make_shared<Node>(Node("C2"));
-    // std::shared_ptr<Node> V1 = std::make_shared<Node>(Node("V1"));
-    // std::shared_ptr<Node> V2 = std::make_shared<Node>(Node("V2"));
-
-    // cm.createDevice(DeviceType::RESISTOR, std::make_pair<std::string, std::vector<double>>("r1", {1e3}), {R1, R2});
-    // cm.createDevice(DeviceType::CAPACITOR, std::make_pair<std::string, std::vector<double>>("c1", {1e-6}), {C1, C2});
-    // cm.createDevice(DeviceType::CURRENT_SOURCE, std::make_pair<std::string, std::vector<double>>("V", {1e-3}), {V1, V2});
-
-    // cm.connect(V1, R1);
-    // cm.connect(R2, C1);
-    // cm.connect(C2, V2);
-
     std::shared_ptr<Node> R1 = std::make_shared<Node>(Node("R1"));
     std::shared_ptr<Node> R2 = std::make_shared<Node>(Node("R2"));
-    std::shared_ptr<Node> L1 = std::make_shared<Node>(Node("L1"));
-    std::shared_ptr<Node> L2 = std::make_shared<Node>(Node("L2"));
+    std::shared_ptr<Node> C1 = std::make_shared<Node>(Node("C1"));
+    std::shared_ptr<Node> C2 = std::make_shared<Node>(Node("C2"));
     std::shared_ptr<Node> V1 = std::make_shared<Node>(Node("V1"));
     std::shared_ptr<Node> V2 = std::make_shared<Node>(Node("V2"));
 
-    cm.createDevice(DeviceType::RESISTOR, std::make_pair<std::string, std::vector<double>>("r1", {1}), {R1, R2});
-    cm.createDevice(DeviceType::INDUCTOR, std::make_pair<std::string, std::vector<double>>("l1", {1e-3}), {L1, L2});
-    cm.createDevice(DeviceType::VOLTAGE_SOURCE, std::make_pair<std::string, std::vector<double>>("V", {100}), {V1, V2});
+    cm.createDevice(DeviceType::RESISTOR, std::make_pair<std::string, std::vector<double>>("r1", {1e3}), {R1, R2});
+    cm.createDevice(DeviceType::CAPACITOR, std::make_pair<std::string, std::vector<double>>("c1", {1e-6}), {C1, C2});
+    cm.createDevice(DeviceType::CURRENT_SOURCE, std::make_pair<std::string, std::vector<double>>("V", {1e-3}), {V1, V2});
 
-    cm.connect(V2, R1);
-    cm.connect(R2, L1);
-    cm.connect(L2, V1);
+    cm.connect(V1, R1);
+    cm.connect(R2, C1);
+    cm.connect(C2, V2);
+
+    // std::shared_ptr<Node> R1 = std::make_shared<Node>(Node("R1"));
+    // std::shared_ptr<Node> R2 = std::make_shared<Node>(Node("R2"));
+    // std::shared_ptr<Node> L1 = std::make_shared<Node>(Node("L1"));
+    // std::shared_ptr<Node> L2 = std::make_shared<Node>(Node("L2"));
+    // std::shared_ptr<Node> V1 = std::make_shared<Node>(Node("V1"));
+    // std::shared_ptr<Node> V2 = std::make_shared<Node>(Node("V2"));
+
+    // cm.createDevice(DeviceType::RESISTOR, std::make_pair<std::string, std::vector<double>>("r1", {1}), {R1, R2});
+    // cm.createDevice(DeviceType::INDUCTOR, std::make_pair<std::string, std::vector<double>>("l1", {1e-3}), {L1, L2});
+    // cm.createDevice(DeviceType::VOLTAGE_SOURCE, std::make_pair<std::string, std::vector<double>>("V", {100}), {V1, V2});
+
+    // cm.connect(V2, R1);
+    // cm.connect(R2, L1);
+    // cm.connect(L2, V1);
 
 
     Orchestrator& oc = Orchestrator::getInstance();

@@ -18,10 +18,6 @@ Device::Device(int terminals) : m_name("dev" + std::to_string(m_counter++)), m_t
     {
         m_pins.push_back(std::make_shared<Node>());
     }
-    for (auto& pin : m_pins)
-    {
-        m_currents[pin] = 0.0;
-    }
 }
 
 Device::Device(std::string name, int terminals) : m_name(name), m_terminals(terminals)
@@ -29,10 +25,6 @@ Device::Device(std::string name, int terminals) : m_name(name), m_terminals(term
     for (int i = 0 ; i < terminals ; i++)
     {
         m_pins.push_back(std::make_shared<Node>());
-    }
-    for (auto& pin : m_pins)
-    {
-        m_currents[pin] = 0.0;
     }
 }
 

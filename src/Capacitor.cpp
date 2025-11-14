@@ -1,11 +1,11 @@
 #include "Capacitor.h"
 
-Capacitor::Capacitor() : TwoTerminal(), m_c(0), m_eqR(0), m_timestamp(0)
+Capacitor::Capacitor() : m_c(0), m_eqR(0), m_timestamp(0)
 {
     m_type = DeviceType::CAPACITOR;
 }
 
-Capacitor::Capacitor(double c) : TwoTerminal(), m_c(c), m_eqR(0), m_timestamp(0)
+Capacitor::Capacitor(double c) : m_c(c), m_eqR(0), m_timestamp(0)
 {
     m_type = DeviceType::CAPACITOR;
 }
