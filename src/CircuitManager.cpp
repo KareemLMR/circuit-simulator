@@ -472,6 +472,7 @@ void CircuitManager::solveCircuit(double deltaT)
             }
         }
     }
+    std::map<std::shared_ptr<Device>, std::shared_ptr<Node>> sourceKCLNode;
     for (auto& device : m_devices)
     {
         if (!device.second->isVoltageSupply())
@@ -484,8 +485,15 @@ void CircuitManager::solveCircuit(double deltaT)
                     {
                         auto& adjDeviceCurrents = adjDevice->getCurrents();
                         auto connectedPin = findWhichNodeConnected(pin, *adjDevice);
-                        adjDeviceCurrents[connectedPin] += device.second->getCurrents()[pin];
-                        adjDevice->routeCurrents(connectedPin);
+                        if (sourceKCLNode.find(adjDevice) == sourceKCLNode.end())
+                        {
+                            sourceKCLNode[adjDevice] = connectedPin;
+                        }
+                        if (sourceKCLNode[adjDevice] == connectedPin)
+                        {
+                            adjDeviceCurrents[connectedPin] += device.second->getCurrents()[pin];
+                            adjDevice->routeCurrents(connectedPin);
+                        }
                     }
                 }
             }
