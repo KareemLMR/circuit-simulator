@@ -9,6 +9,7 @@
 #include "CurrentSource.h"
 #include <map>
 #include <memory>
+#include <utility>
 #include <set>
 #include <eigen3/Eigen/Dense>
 #include <numeric> 
@@ -60,6 +61,9 @@ class CircuitManager : public ICircuitManager
         
         std::pair<std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>> queryDeviceVoltages(std::string deviceName) override;
         std::map<std::shared_ptr<Node>, double> queryDeviceCurrents(std::string deviceName) override;
+
+        void applyKCL(void);
+        void arrangeSources(std::map<std::shared_ptr<Device>, std::shared_ptr<Node>>& outerSources);
 
         ~CircuitManager();
 

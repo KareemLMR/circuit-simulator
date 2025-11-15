@@ -461,6 +461,14 @@ void CircuitManager::solveCircuit(double deltaT)
         device.second->prepareForNextStep(deltaT);
     }
 
+    applyKCL();
+
+    m_circuitMatrix.clear();
+    m_voltages.clear();
+}
+
+void CircuitManager::applyKCL(void)
+{
     // Clear sources currents first.
     for (auto& device : m_devices)
     {
@@ -473,66 +481,93 @@ void CircuitManager::solveCircuit(double deltaT)
             }
         }
     }
-    std::map<std::shared_ptr<Device>, std::shared_ptr<Node>> sourceKCLNode;
-    for (auto& device : m_devices)
-    {
-        if (!device.second->isVoltageSupply())
-        {
-            for (auto& pin : device.second->getPins())
-            {
-                for (auto& adjDevice : getAdjacentDevices(pin))
-                {
-                    if (adjDevice->isVoltageSupply())
-                    {
-                        auto& adjDeviceCurrents = adjDevice->getCurrents();
-                        auto connectedPin = findWhichNodeConnected(pin, *adjDevice);
-                        if (sourceKCLNode.find(adjDevice) == sourceKCLNode.end())
-                        {
-                            sourceKCLNode[adjDevice] = connectedPin;
-                        }
-                        if (sourceKCLNode[adjDevice] == connectedPin)
-                        {
-                            adjDeviceCurrents[connectedPin] += device.second->getCurrents()[pin];
-                            adjDevice->routeCurrents(connectedPin);
-                        }
-                    }
-                }
-            }
-        }
-    }
+    std::map<std::shared_ptr<Device>, std::shared_ptr<Node>> outerSources;
     for (auto& device : m_devices)
     {
         if (device.second->isVoltageSupply())
         {
-            bool innerSource = true;
+            bool outerSource = true;
+            std::shared_ptr<Node> outerNode = nullptr;
             for (auto& pin : device.second->getPins())
             {
                 for (auto& adjDevice : getAdjacentDevices(pin))
                 {
-                    if (!adjDevice->isVoltageSupply())
+                    if (adjDevice != device.second && adjDevice->isVoltageSupply())
                     {
-                        innerSource = false;
+                        outerSource = false;
                         break;
                     }
                 }
-            }
-            if (innerSource)
-            {
-                for (auto& pin : device.second->getPins())
+                if (outerSource)
                 {
-                    for (auto& adjDevice : getAdjacentDevices(pin))
+                    outerNode = pin;
+                    outerSources[device.second] = outerNode;
+                    break;
+                }
+            }
+            if (outerSource)
+            {
+                for (auto& adjDevice : getAdjacentDevices(outerNode))
+                {
+                    if (adjDevice != device.second)
                     {
-                        auto& adjDeviceCurrents = adjDevice->getCurrents();
-                        auto connectedPin = findWhichNodeConnected(pin, *adjDevice);
-                        adjDeviceCurrents[connectedPin] += device.second->getCurrents()[pin];
-                        adjDevice->routeCurrents(connectedPin);
+                        auto& deviceCurrents = device.second->getCurrents();
+                        auto connectedPin = findWhichNodeConnected(outerNode, *adjDevice);
+                        deviceCurrents[outerNode] += adjDevice->getCurrents()[connectedPin];
+                        device.second->routeCurrents(outerNode);
                     }
                 }
             }
         }
     }
-    m_circuitMatrix.clear();
-    m_voltages.clear();
+    arrangeSources(outerSources);
+}
+
+void CircuitManager::arrangeSources(std::map<std::shared_ptr<Device>, std::shared_ptr<Node>>& outerSources)
+{
+    for (auto& outerSource : outerSources)
+    {
+        std::shared_ptr<Node> innerNode;
+        for (auto& node : outerSource.first->getPins())
+        {
+            if (node != outerSource.second)
+            {
+                innerNode = node;
+            }
+        }
+        std::map<std::shared_ptr<Node>, double>& currents = outerSource.first->getCurrents();
+        int adjInnerSources = 0;
+        double possibleSolution = currents[innerNode];
+        std::shared_ptr<Device> nextDevice;
+        std::shared_ptr<Node> nextNode;
+        for (auto& adjDevice : getAdjacentDevices(innerNode))
+        {
+            if (adjDevice != outerSource.first)
+            {
+                std::map<std::shared_ptr<Node>, double>& currents = adjDevice->getCurrents();
+                std::shared_ptr<Node> connectedNode = findWhichNodeConnected(innerNode, *adjDevice);
+                possibleSolution -= currents[connectedNode];
+                if (adjDevice->isVoltageSupply() && outerSources.find(adjDevice) == outerSources.end())
+                {
+                    adjInnerSources++;
+                    nextDevice = adjDevice;
+                    nextNode = connectedNode;
+                }
+            }
+        }
+        if (adjInnerSources == 1)
+        {
+            outerSources[nextDevice] = nextNode;
+            std::map<std::shared_ptr<Node>, double>& currents = nextDevice->getCurrents();
+            currents[nextNode] = possibleSolution;
+            nextDevice->routeCurrents(nextNode);
+            arrangeSources(outerSources);
+        }
+        else
+        {
+            return;
+        }
+    }
 }
 
 std::pair<std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>> CircuitManager::queryDeviceVoltages(std::string deviceName)
