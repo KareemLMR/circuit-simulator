@@ -37,6 +37,7 @@ class CircuitManager : public ICircuitManager
         std::vector<std::shared_ptr<Device>> getAdjacentDevices(const std::shared_ptr<Node>& node);
         std::set<std::shared_ptr<Node>> getUniqueNodes(void);
         void initializeCircuitMatrix(std::map<std::shared_ptr<Node>, std::vector<double>>& circuitMatrix);
+        void initializeCurrentMatrix(std::map<std::shared_ptr<Device>, std::vector<double>>& currenttMatrix);
         std::vector<std::shared_ptr<Node>> findAllNodesConnected(const std::shared_ptr<Node>& node);
         std::shared_ptr<Node> findWhichNodeConnected(const std::shared_ptr<Node>& node, const Device& device);
         std::shared_ptr<Node> findWhichNodeConnected(const std::shared_ptr<Node>& node, const std::set<std::shared_ptr<Node>>& nodes);
@@ -57,13 +58,10 @@ class CircuitManager : public ICircuitManager
         void solveCircuit(double deltaT) override;
 
         std::vector<std::vector<double>>& getCircuitMatrix() { return m_circuitMatrix; }
-        std::vector<double>& getVoltages() { return m_voltages; }
+        std::vector<double>& getVoltages() { return m_results; }
         
         std::pair<std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>> queryDeviceVoltages(std::string deviceName) override;
         std::map<std::shared_ptr<Node>, double> queryDeviceCurrents(std::string deviceName) override;
-
-        void applyKCL(void);
-        void arrangeSources(std::map<std::shared_ptr<Device>, std::shared_ptr<Node>>& outerSources);
 
         ~CircuitManager();
 
@@ -75,7 +73,7 @@ class CircuitManager : public ICircuitManager
         std::map<std::string, std::shared_ptr<Device>> m_devices;
         std::vector<std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>> m_sourceNodes;
         std::vector<std::vector<double>> m_circuitMatrix;
-        std::vector<double> m_voltages;
+        std::vector<double> m_results;
         std::shared_ptr<Node> m_groundNode;
 };
 

@@ -73,12 +73,12 @@ void Orchestrator::orchestrate(void)
     while (true)
     {
         m_circuitManager->solveCircuit(1.0 / m_circuitRefreshFrequency);
-        for (auto& node : m_circuitManager->queryDeviceVoltages("c1").second)
+        for (auto& node : m_circuitManager->queryDeviceVoltages("r1").second)
         {
             std::cout << node->getVolt() << std::endl;
         }
 
-        for (auto& path : m_circuitManager->queryDeviceCurrents("c1"))
+        for (auto& path : m_circuitManager->queryDeviceCurrents("r1"))
         {
             std::cout << "Node " << path.first->getName() << " current = " << path.second << std::endl;
         }
