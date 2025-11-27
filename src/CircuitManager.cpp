@@ -381,9 +381,14 @@ void CircuitManager::calculateCircuitMatrix(double deltaT)
             }
             else
             {
+                double knownIndependentCurrents = 0.0;
                 for (auto& device : adjacentDevices)
                 {
                     std::shared_ptr<Node> deviceNode = findWhichNodeConnected(node, *device);
+                    if (device->isCurrentSupply())
+                    {
+                        knownIndependentCurrents += device->getCurrent(deviceNode);
+                    }
                     if (device->isVoltageSupply())
                     {
                         if (node == device->getPins()[0])
@@ -412,6 +417,7 @@ void CircuitManager::calculateCircuitMatrix(double deltaT)
                         }
                     }
                 }
+                m_results[index] = knownIndependentCurrents;
                 index++;
                 for (auto& source : sourcesMap)
                 {
