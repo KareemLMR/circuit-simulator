@@ -5,19 +5,22 @@
 #include "vector"
 #include <map>
 #include <memory>
+#include <boost/dll/alias.hpp>
 
-enum class DeviceType
-{
-    RESISTOR,
-    CAPACITOR,
-    INDUCTOR,
-    DIODE,
-    TRANSISTOR,
-    VOLTAGE_SOURCE,
-    CURRENT_SOURCE
-};
+#define DEVICE_REGISTER_PLUGIN_CREATOR_METHOD(creatorMethod) BOOST_DLL_ALIAS(creatorMethod, create)
 
-class Device
+// Export macro
+#ifdef _WIN32
+    #ifdef DEVICE_EXPORTS
+        #define DEVICE_API __declspec(dllexport)
+    #else
+        #define DEVICE_API __declspec(dllimport)
+    #endif
+#else
+    #define DEVICE_API __attribute__((visibility("default")))
+#endif
+
+class DEVICE_API Device
 {
     public:
         Device();
@@ -43,8 +46,6 @@ class Device
         std::vector<std::shared_ptr<Node>>& getPins(void);
         std::map<std::shared_ptr<Node>, double>& getCurrents(void);
 
-        DeviceType getDeviceType(void);
-
         virtual void updateDeviceState() = 0;
         virtual void forwardDeviceState() = 0;
         virtual std::map<std::shared_ptr<Node>, double> getCurrentCoefficients(const std::shared_ptr<Node>& node, double deltaT) = 0;
@@ -54,11 +55,9 @@ class Device
         virtual double getCurrent(const std::shared_ptr<Node>& node) = 0;
         virtual void prepareForNextStep(double deltaT) = 0;
         virtual void routeCurrents(std::shared_ptr<Node> node) = 0;
+        virtual bool setDeviceParameters(const std::vector<double>& parameters) = 0;
 
         virtual ~Device();
-
-    protected:
-        DeviceType m_type;
 
     private:
         std::string m_name;

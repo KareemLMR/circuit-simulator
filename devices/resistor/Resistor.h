@@ -4,9 +4,12 @@
 #include "TwoTerminal.h"
 #include <iostream>
 
-class Resistor : public TwoTerminal
+class DEVICE_API Resistor : public TwoTerminal
 {
     public:
+        static Device* create();
+        static void destroy(Device* device);
+
         Resistor();
         Resistor(double r);
 
@@ -23,9 +26,11 @@ class Resistor : public TwoTerminal
         std::map<std::shared_ptr<Node>, double> getCurrentCoefficients(const std::shared_ptr<Node>& node, double deltaT) override;
         bool isVoltageSupply() override { return false; }
         bool isCurrentSupply() override { return false; }
+        bool receiveDeviceParameters(void) override;
 
         ~Resistor();
     private:
         double m_r;
 };
+
 #endif

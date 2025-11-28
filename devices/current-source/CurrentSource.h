@@ -4,11 +4,12 @@
 #include "TwoTerminal.h"
 #include <iostream>
 
-
-
-class CurrentSource : public TwoTerminal
+class DEVICE_API CurrentSource : public TwoTerminal
 {
     public:
+        static Device* create();
+        static void destroy(Device* device);
+
         CurrentSource();
         CurrentSource(double i);        
 
@@ -22,6 +23,7 @@ class CurrentSource : public TwoTerminal
         bool isVoltageSupply() override { return false; }
         std::map<std::shared_ptr<Node>, double> getCurrentCoefficients(const std::shared_ptr<Node>& node, double deltaT) override { return {}; };
         void prepareForNextStep(double deltaT) override {};
+        bool receiveDeviceParameters(void) override;
 
         ~CurrentSource();
 };

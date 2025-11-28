@@ -1,6 +1,7 @@
 #include "CircuitManager.h"
 #include <iostream>
 
+const char* DEVICE_CREATOR_ALIAS = "create";
 std::unique_ptr<CircuitManager> CircuitManager::m_instance = nullptr;
 
 
@@ -17,25 +18,7 @@ CircuitManager& CircuitManager::getInstance(void)
     return *m_instance;
 }
 
-int CircuitManager::getDeviceTypeTerminals(DeviceType type)
-{
-    switch (type)
-    {
-        case DeviceType::RESISTOR:
-        case DeviceType::CAPACITOR:
-        case DeviceType::INDUCTOR:
-        case DeviceType::DIODE:
-        case DeviceType::VOLTAGE_SOURCE:
-        case DeviceType::CURRENT_SOURCE:
-            return 2;
-        case DeviceType::TRANSISTOR:
-            return 3;
-    }
-    return 0;
-}
-
-
-bool CircuitManager::createDevice(DeviceType type,
+bool CircuitManager::createDevice(std::string type,
                                   const std::pair<std::string, std::vector<double>>& deviceCharacteristics,
                                   const std::vector<std::shared_ptr<Node>>& pins)
 {
@@ -44,67 +27,21 @@ bool CircuitManager::createDevice(DeviceType type,
         std::cout << "Device already exists" << std::endl;
         return false;
     }
-    if (pins.size() != 0 && pins.size() != getDeviceTypeTerminals(type))
+
+    boost::filesystem::path libraryPath("../devices/" + type + "/lib" + type + ".so");
+    std::unique_ptr<Device, DeviceLibraryDeleter<Device>> device = loadDevice<Device>(libraryPath);
+    if (device)
     {
-        std::cout << "Wrong number of pins" << std::endl;
-        return false;
+        std::cout << "Loading of plugin succeeded!" << std::endl;
     }
-    switch (type)
+    else
     {
-        case DeviceType::RESISTOR:
-        {
-            std::cout << "Creating a resistor" << std::endl;
-            std::shared_ptr<Resistor> r = std::make_shared<Resistor>();
-            r->setName(deviceCharacteristics.first);
-            r->setResistance(deviceCharacteristics.second[0]);
-            m_devices[deviceCharacteristics.first] = std::move(r);
-            break;
-        }
-
-        case DeviceType::CAPACITOR:
-        {
-            std::cout << "Creating a capacitor" << std::endl;
-            std::shared_ptr<Capacitor> c = std::make_shared<Capacitor>();
-            c->setName(deviceCharacteristics.first);
-            c->setCapacitance(deviceCharacteristics.second[0]);
-            m_devices[deviceCharacteristics.first] = std::move(c);
-            break;
-        }
-        
-        case DeviceType::INDUCTOR:
-        {
-            std::cout << "Creating an inductor" << std::endl;
-            std::shared_ptr<Inductor> l = std::make_shared<Inductor>();
-            l->setName(deviceCharacteristics.first);
-            l->setInductance(deviceCharacteristics.second[0]);
-            m_devices[deviceCharacteristics.first] = std::move(l);
-            break;
-        }
-
-        case DeviceType::VOLTAGE_SOURCE:
-        {
-            std::cout << "Creating a voltage source" << std::endl;
-            std::shared_ptr<VoltageSource> vs = std::make_shared<VoltageSource>();
-            vs->setName(deviceCharacteristics.first);
-            vs->setVoltage(deviceCharacteristics.second[0]);
-            m_devices[deviceCharacteristics.first] = std::move(vs);
-            break;
-        }
-
-        case DeviceType::CURRENT_SOURCE:
-        {
-            std::cout << "Creating a current source" << std::endl;
-            std::shared_ptr<CurrentSource> is = std::make_shared<CurrentSource>();
-            is->setName(deviceCharacteristics.first);
-            is->setCurrent(deviceCharacteristics.second[0]);
-            m_devices[deviceCharacteristics.first] = std::move(is);
-            break;
-        }
-            
-        default:
-            std::cout << "Invalid device type" << std::endl;
-            return false;
+        std::cout << "Loading of plugin failed!" << std::endl;
     }
+    device->setName(deviceCharacteristics.first);
+    device->setDeviceParameters(deviceCharacteristics.second);
+    m_devices[deviceCharacteristics.first] = std::move(device);
+
     int index = 0;
     for (auto& node : m_devices[deviceCharacteristics.first]->getPins())
     {

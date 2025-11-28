@@ -5,9 +5,12 @@
 #include <iostream>
 #include <math.h>
 
-class Capacitor : public TwoTerminal
+class DEVICE_API Capacitor : public TwoTerminal
 {
     public:
+        static Device* create();
+        static void destroy(Device* device);
+
         Capacitor();
         Capacitor(double c);
 
@@ -29,6 +32,7 @@ class Capacitor : public TwoTerminal
         std::map<std::shared_ptr<Node>, double> getCurrentCoefficients(const std::shared_ptr<Node>& node, double deltaT) override;
         bool isVoltageSupply() override { return true; }
         bool isCurrentSupply() override { return false; }
+        bool receiveDeviceParameters(void) override;
 
         ~Capacitor();
     private:

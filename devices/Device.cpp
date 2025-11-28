@@ -130,11 +130,6 @@ std::map<std::shared_ptr<Node>, double>& Device::getCurrents(void)
     return m_currents;
 }
 
-DeviceType Device::getDeviceType(void)
-{
-    return m_type;
-}
-
 Device::~Device()
 {
     m_name.clear();

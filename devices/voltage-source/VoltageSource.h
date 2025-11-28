@@ -5,10 +5,12 @@
 #include <iostream>
 
 
-
-class VoltageSource : public TwoTerminal
+class DEVICE_API VoltageSource : public TwoTerminal
 {
     public:
+        static Device* create();
+        static void destroy(Device* device);
+
         VoltageSource();
         VoltageSource(double v);        
 
@@ -22,6 +24,7 @@ class VoltageSource : public TwoTerminal
         bool isCurrentSupply() override { return false; }
         std::map<std::shared_ptr<Node>, double> getCurrentCoefficients(const std::shared_ptr<Node>& node, double deltaT) override { return {}; };
         void prepareForNextStep(double deltaT) override {};
+        bool receiveDeviceParameters(void) override;
 
         ~VoltageSource();
 };

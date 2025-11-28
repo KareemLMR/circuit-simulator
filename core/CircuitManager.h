@@ -2,11 +2,6 @@
 #define CIRCUITMANAGER_H_
 
 #include "TwoTerminal.h"
-#include "Resistor.h"
-#include "Capacitor.h"
-#include "Inductor.h"
-#include "VoltageSource.h"
-#include "CurrentSource.h"
 #include <map>
 #include <memory>
 #include <utility>
@@ -14,6 +9,20 @@
 #include <eigen3/Eigen/Dense>
 #include <numeric> 
 #include "ICircuitManager.h"
+#include <boost/dll/import.hpp>
+#include <boost/dll/shared_library.hpp>
+
+extern const char* DEVICE_CREATOR_ALIAS;
+
+template <class T>
+struct DeviceLibraryDeleter
+{
+    std::shared_ptr<boost::dll::shared_library> m_deviceLibrary;
+    void operator()(T* device) const
+    {
+        delete device;
+    }
+};
 
 class CircuitManager : public ICircuitManager
 {
@@ -26,9 +35,8 @@ class CircuitManager : public ICircuitManager
         CircuitManager& operator=(const CircuitManager&& other) = delete;
 
         static CircuitManager& getInstance(void);
-        static int getDeviceTypeTerminals(DeviceType type);
 
-        bool createDevice(DeviceType type,
+        bool createDevice(std::string type,
                           const std::pair<std::string, std::vector<double>>& deviceCharacteristics,
                           const std::vector<std::shared_ptr<Node>>& pins = {}) override;
 
@@ -64,6 +72,38 @@ class CircuitManager : public ICircuitManager
         std::map<std::shared_ptr<Node>, double> queryDeviceCurrents(std::string deviceName) override;
 
         ~CircuitManager();
+
+        template <class T>
+        std::unique_ptr<T, DeviceLibraryDeleter<T>> loadDevice(const boost::filesystem::path& path)
+        {
+            typedef T*(DeviceFunction)();
+            try
+            {
+                boost::dll::shared_library library(path, boost::dll::load_mode::append_decorations);
+                if (!library.is_loaded())
+                {
+                    std::cout << "Loading of library " << path << " failed!" << std::endl;
+                    return {};
+                }
+
+                std::function<DeviceFunction> createDevice = boost::dll::import_alias<DeviceFunction>(library, DEVICE_CREATOR_ALIAS);
+
+                T* device = createDevice();
+                DeviceLibraryDeleter<T> deleter;
+                deleter.m_deviceLibrary = std::make_shared<boost::dll::shared_library>(library);
+
+                return std::unique_ptr<T, DeviceLibraryDeleter<T>>(device, deleter);
+            }
+            catch(const boost::system::system_error& error)
+            {
+                std::cout << "Loading of library " << path << " failed, exception: " << error.what() << std::endl;
+            }
+            catch(const std::bad_alloc& error)
+            {
+                std::cout << "Loading of library " << path << " failed, insufficient memory, exception: " << error.what() << std::endl;
+            }
+            return {};
+        }
 
     private:
         std::map<std::shared_ptr<Node>, std::shared_ptr<Device>> m_pinOf;

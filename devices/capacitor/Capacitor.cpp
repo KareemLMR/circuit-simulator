@@ -1,23 +1,35 @@
 #include "Capacitor.h"
 
+DEVICE_REGISTER_PLUGIN_CREATOR_METHOD(Capacitor::create)
+
+extern "C" 
+{
+    __attribute__((visibility("default"))) 
+    Device* Capacitor::create()
+    {
+        return new Capacitor();
+    }
+}
+
+void Capacitor::destroy(Device* device)
+{
+    delete device;
+}
+
 Capacitor::Capacitor() : m_c(0), m_eqR(0), m_timestamp(0)
 {
-    m_type = DeviceType::CAPACITOR;
 }
 
 Capacitor::Capacitor(double c) : m_c(c), m_eqR(0), m_timestamp(0)
 {
-    m_type = DeviceType::CAPACITOR;
 }
 
 Capacitor::Capacitor(const Capacitor& c) : TwoTerminal(c), m_c(c.getCapacitance())
 {
-    m_type = DeviceType::CAPACITOR;
 }
 
 Capacitor::Capacitor(const Capacitor&& c) : TwoTerminal(std::move(c)), m_c(c.getCapacitance())
 {
-    m_type = DeviceType::CAPACITOR;
     c.setCapacitance(0);
 }
 
@@ -27,7 +39,6 @@ Capacitor& Capacitor::operator=(const Capacitor& c)
     {
         TwoTerminal::operator=(c);
         m_c = c.getCapacitance();
-        m_type = DeviceType::CAPACITOR;
     }
     return *this;
 }
@@ -37,7 +48,6 @@ Capacitor& Capacitor::operator=(const Capacitor&& c)
     TwoTerminal::operator=(std::move(c));
     m_c = c.getCapacitance();
     c.setCapacitance(0);
-    m_type = DeviceType::CAPACITOR;
     return *this;
 }
 
@@ -83,6 +93,20 @@ std::map<std::shared_ptr<Node>, double> Capacitor::getCurrentCoefficients(const 
 {
     std::map<std::shared_ptr<Node>, double> currentCoefficients;
     return currentCoefficients;
+}
+
+bool Capacitor::receiveDeviceParameters(void)
+{
+    if (m_parameters[0] > 0)
+    {
+        setCapacitance(m_parameters[0]);
+        return true;
+    }
+    else
+    {
+        std::cout << "Failed to set device parameter, less than 0 value provided for capacitance!" << std::endl;
+        return false;
+    }
 }
 
 Capacitor::~Capacitor()

@@ -176,6 +176,17 @@ double TwoTerminal::getCurrent(const std::shared_ptr<Node>& node)
     }
 }
 
+bool TwoTerminal::setDeviceParameters(const std::vector<double>& parameters)
+{
+    if (parameters.empty())
+    {
+        std::cout << "Failed to set parameters of " << getName() << ", parameters list empty" << std::endl;
+        return false;
+    }
+    m_parameters = parameters;
+    return receiveDeviceParameters();
+}
+
 TwoTerminal::~TwoTerminal()
 {
     m_transferFunction = nullptr;

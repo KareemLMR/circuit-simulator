@@ -1,23 +1,35 @@
 #include "Inductor.h"
 
+DEVICE_REGISTER_PLUGIN_CREATOR_METHOD(Inductor::create)
+
+extern "C" 
+{
+    __attribute__((visibility("default"))) 
+    Device* Inductor::create()
+    {
+        return new Inductor();
+    }
+}
+
+void Inductor::destroy(Device* device)
+{
+    delete device;
+}
+
 Inductor::Inductor() : m_l(0), m_eqG(0), m_timestamp(0)
 {
-    m_type = DeviceType::INDUCTOR;
 }
 
 Inductor::Inductor(double l) : m_l(l), m_eqG(0), m_timestamp(0)
 {
-    m_type = DeviceType::INDUCTOR;
 }
 
 Inductor::Inductor(const Inductor& l) : TwoTerminal(l), m_l(l.getInductance())
 {
-    m_type = DeviceType::INDUCTOR;
 }
 
 Inductor::Inductor(const Inductor&& l) : TwoTerminal(std::move(l)), m_l(l.getInductance())
 {
-    m_type = DeviceType::INDUCTOR;
     l.setInductance(0);
 }
 
@@ -27,7 +39,6 @@ Inductor& Inductor::operator=(const Inductor& l)
     {
         TwoTerminal::operator=(l);
         m_l = l.getInductance();
-        m_type = DeviceType::INDUCTOR;
     }
     return *this;
 }
@@ -37,7 +48,6 @@ Inductor& Inductor::operator=(const Inductor&& l)
     TwoTerminal::operator=(std::move(l));
     m_l = l.getInductance();
     l.setInductance(0);
-    m_type = DeviceType::INDUCTOR;
     return *this;
 }
 
@@ -85,6 +95,20 @@ std::map<std::shared_ptr<Node>, double> Inductor::getCurrentCoefficients(const s
 {
     std::map<std::shared_ptr<Node>, double> currentCoefficients;
     return currentCoefficients;
+}
+
+bool Inductor::receiveDeviceParameters(void)
+{
+    if (m_parameters[0] > 0)
+    {
+        setInductance(m_parameters[0]);
+        return true;
+    }
+    else
+    {
+        std::cout << "Failed to set device parameter, less than 0 value provided for inductance!" << std::endl;
+        return false;
+    }
 }
 
 Inductor::~Inductor()

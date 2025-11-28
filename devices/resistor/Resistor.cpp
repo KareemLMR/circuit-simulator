@@ -1,23 +1,35 @@
 #include "Resistor.h"
 
+DEVICE_REGISTER_PLUGIN_CREATOR_METHOD(Resistor::create)
+
+extern "C" 
+{
+    __attribute__((visibility("default"))) 
+    Device* Resistor::create()
+    {
+        return new Resistor();
+    }
+}
+
+void Resistor::destroy(Device* device)
+{
+    delete device;
+}
+
 Resistor::Resistor() : m_r(0)
 {
-    m_type = DeviceType::RESISTOR;
 }
 
 Resistor::Resistor(double r) : m_r(r)
 {
-    m_type = DeviceType::RESISTOR;
 }
 
 Resistor::Resistor(const Resistor& r) : TwoTerminal(r), m_r(r.getResistance())
 {
-    m_type = DeviceType::RESISTOR;
 }
 
 Resistor::Resistor(const Resistor&& r) : TwoTerminal(std::move(r)), m_r(r.getResistance())
 {
-    m_type = DeviceType::RESISTOR;
     r.setResistance(0);
 }
 
@@ -27,7 +39,6 @@ Resistor& Resistor::operator=(const Resistor& r)
     {
         TwoTerminal::operator=(r);
         m_r = r.getResistance();
-        m_type = DeviceType::RESISTOR;
     }
     return *this;
 }
@@ -37,7 +48,6 @@ Resistor& Resistor::operator=(const Resistor&& r)
     TwoTerminal::operator=(std::move(r));
     m_r = r.getResistance();
     r.setResistance(0);
-    m_type = DeviceType::RESISTOR;
     return *this;
 }
 
@@ -79,6 +89,20 @@ std::map<std::shared_ptr<Node>, double> Resistor::getCurrentCoefficients(const s
         return {};
     }
     return currentCoefficients;
+}
+
+bool Resistor::receiveDeviceParameters(void)
+{
+    if (m_parameters[0] > 0)
+    {
+        setResistance(m_parameters[0]);
+        return true;
+    }
+    else
+    {
+        std::cout << "Failed to set device parameter, less than 0 value provided for resistance!" << std::endl;
+        return false;
+    }
 }
 
 Resistor::~Resistor()

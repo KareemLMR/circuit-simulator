@@ -4,9 +4,12 @@
 #include "TwoTerminal.h"
 #include <iostream>
 
-class Inductor : public TwoTerminal
+class DEVICE_API Inductor : public TwoTerminal
 {
     public:
+        static Device* create();
+        static void destroy(Device* device);
+
         Inductor();
         Inductor(double l);
 
@@ -28,6 +31,7 @@ class Inductor : public TwoTerminal
         std::map<std::shared_ptr<Node>, double> getCurrentCoefficients(const std::shared_ptr<Node>& node, double deltaT) override;
         bool isVoltageSupply() override { return false; }
         bool isCurrentSupply() override { return true; }
+        bool receiveDeviceParameters(void) override;
 
         ~Inductor();
     private:
