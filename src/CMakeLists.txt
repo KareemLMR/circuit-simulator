@@ -1,4 +1,12 @@
-add_executable(${PROJECT_NAME} main.cpp ${CORE_BASE}/CircuitManager.cpp ${DEVICE_BASE}/Device.cpp ${CORE_BASE}/Node.cpp ${DEVICE_BASE}/TwoTerminal.cpp ${CORE_BASE}/Orchestrator.cpp)
+add_executable(${PROJECT_NAME}
+    main.cpp ${CORE_BASE}/CircuitManager.cpp
+    ${DEVICE_BASE}/Device.cpp
+    ${CORE_BASE}/Node.cpp
+    ${DEVICE_BASE}/TwoTerminal.cpp
+    ${CORE_BASE}/Orchestrator.cpp
+    ${DISPLAY_BASE}/MainWindow.cpp
+    ${DISPLAY_BASE}/MainWindow.ui)
+
 include_directories(${Boost_INCLUDE_DIRS})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE

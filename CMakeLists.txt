@@ -35,10 +35,12 @@ add_definitions(-DBOOST_DLL_USE_STD_FS)
 set(DEVICE_BASE ${CMAKE_CURRENT_SOURCE_DIR}/devices)
 set(CORE_BASE ${CMAKE_CURRENT_SOURCE_DIR}/core)
 set(INTERFACE_BASE ${CMAKE_CURRENT_SOURCE_DIR}/interfaces)
+set(DISPLAY_BASE ${CMAKE_CURRENT_SOURCE_DIR}/display)
 
 include_directories(${DEVICE_BASE})
 include_directories(${CORE_BASE})
 include_directories(${INTERFACE_BASE})
+include_directories(${DISPLAY_BASE})
 
 add_compile_options(-fpermissive)
 add_subdirectory(src)
