@@ -1,5 +1,5 @@
 #include "CircuitManager.h"
-#include <iostream>
+#include <QDebug>
 
 const char* DEVICE_CREATOR_ALIAS = "create";
 std::unique_ptr<CircuitManager> CircuitManager::m_instance = nullptr;
@@ -24,7 +24,7 @@ bool CircuitManager::createDevice(std::string type,
 {
     if (m_devices.find(deviceCharacteristics.first) != m_devices.end())
     {
-        std::cout << "Device already exists" << std::endl;
+        qDebug() << "Device already exists" ;
         return false;
     }
 
@@ -32,11 +32,11 @@ bool CircuitManager::createDevice(std::string type,
     std::unique_ptr<Device, DeviceLibraryDeleter<Device>> device = loadDevice<Device>(libraryPath);
     if (device)
     {
-        std::cout << "Loading of plugin succeeded!" << std::endl;
+        qDebug() << "Loading of plugin succeeded!" ;
     }
     else
     {
-        std::cout << "Loading of plugin failed!" << std::endl;
+        qDebug() << "Loading of plugin failed!" ;
     }
     device->setName(deviceCharacteristics.first);
     device->setDeviceParameters(deviceCharacteristics.second);
@@ -63,7 +63,7 @@ bool CircuitManager::connect(const std::shared_ptr<Node>& node1, const std::shar
 {
     if (m_connected.find(node1) == m_connected.end() || m_connected.find(node2) == m_connected.end())
     {
-        std::cout << "Requested to connect invalid nodes!" << std::endl;
+        qDebug() << "Requested to connect invalid nodes!" ;
         return false;
     }
 
@@ -206,7 +206,7 @@ std::shared_ptr<Node> CircuitManager::findWhichNodeConnected(const std::shared_p
             return n;
         }
     }
-    std::cout << "No node connected to " << node->getName() << std::endl;
+    qDebug() << "No node connected to " << QString::fromStdString(node->getName());
     return nullptr;
 }
 
@@ -309,7 +309,7 @@ void CircuitManager::calculateCircuitMatrix(double deltaT)
                             }
                             else
                             {
-                                std::cout << "Invalid node found! " << n.first->getName() << std::endl;
+                                qDebug() << "Invalid node found! " << QString::fromStdString(n.first->getName());
                             }
                         }
                     }
@@ -349,7 +349,7 @@ void CircuitManager::calculateCircuitMatrix(double deltaT)
                             }
                             else
                             {
-                                std::cout << "Invalid node found! " << n.first->getName() << std::endl;
+                                qDebug() << "Invalid node found! " << QString::fromStdString(n.first->getName());
                             }
                         }
                     }
@@ -448,16 +448,16 @@ void CircuitManager::solveCircuit(double deltaT)
     {
         for (auto e : row)
         {
-            std::cout << e << " ";
+            qDebug() << e << " ";
         }
-        std::cout << std::endl;
+        qDebug() ;
     }
 
     for (auto e : m_results)
     {
-        std::cout << e << " ";
+        qDebug() << e << " ";
     }
-    std::cout << std::endl;
+    qDebug() ;
 
     // Step 3: Map into Eigen::MatrixXd (RowMajor for correct layout)
     Eigen::MatrixXd A = convert2DVectorToMatrix(getCircuitMatrix());

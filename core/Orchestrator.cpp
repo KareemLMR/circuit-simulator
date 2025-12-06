@@ -21,28 +21,28 @@ bool Orchestrator::init(double userInterfaceClockFrequency, double circuitRefres
 {
     if (m_isInitialized)
     {
-        std::cout << "Orchestrator is already initialized!" << std::endl;
+        qDebug() << "Orchestrator is already initialized!" ;
     }
     else
     {
         if (circuitManager == nullptr)
         {
-            std::cout << "Circuit Manager is not initialized!" << std::endl;
+            qDebug() << "Circuit Manager is not initialized!" ;
             return false;
         }
         if (userInterfaceClockFrequency > circuitRefreshFrequency)
         {
-            std::cout << "circuitRefreshFrequency must be bigger than userInterfaceClockFrequency" << std::endl;
+            qDebug() << "circuitRefreshFrequency must be bigger than userInterfaceClockFrequency" ;
             return false;
         }
         if (userInterfaceClockFrequency <= 0 || circuitRefreshFrequency <= 0)
         {
-            std::cout << "userInterfaceClockFrequency and circuitRefreshFrequency must be positive integers" << std::endl;
+            qDebug() << "userInterfaceClockFrequency and circuitRefreshFrequency must be positive integers" ;
             return false;
         }
         if (userInterfaceClockFrequency > MAX_USER_INTERFACE_FREQUENCY_SUPPORTED)
         {
-            std::cout << "userInterfaceClockFrequency provided is bigger than supported maximum value of " << MAX_USER_INTERFACE_FREQUENCY_SUPPORTED << std::endl;
+            qDebug() << "userInterfaceClockFrequency provided is bigger than supported maximum value of " << MAX_USER_INTERFACE_FREQUENCY_SUPPORTED ;
             return false;
         }
 
@@ -60,7 +60,7 @@ bool Orchestrator::start(void)
 {
     if (!m_isInitialized)
     {
-        std::cout << "Orchestrator is not initialized!" << std::endl;
+        qDebug() << "Orchestrator is not initialized!" ;
         return false;
     }
     m_userInterfaceThread = std::thread((std::bind(&Orchestrator::orchestrate, this)));
@@ -75,12 +75,12 @@ void Orchestrator::orchestrate(void)
         m_circuitManager->solveCircuit(1.0 / m_circuitRefreshFrequency);
         for (auto& node : m_circuitManager->queryDeviceVoltages("l1").second)
         {
-            std::cout << node->getVolt() << std::endl;
+            qDebug() << node->getVolt() ;
         }
 
         for (auto& path : m_circuitManager->queryDeviceCurrents("l1"))
         {
-            std::cout << "Node " << path.first->getName() << " current = " << path.second << std::endl;
+            qDebug() << "Node " << QString::fromStdString(path.first->getName()) << " current = " << path.second ;
         }
         std::chrono::duration<double> sleep_time(1.0 / m_userInterfaceClockFrequency);
         std::this_thread::sleep_for(sleep_time);

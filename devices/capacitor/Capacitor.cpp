@@ -104,7 +104,7 @@ bool Capacitor::receiveDeviceParameters(void)
     }
     else
     {
-        std::cout << "Failed to set device parameter, less than 0 value provided for capacitance!" << std::endl;
+        qDebug() << "Failed to set device parameter, less than 0 value provided for capacitance!" ;
         return false;
     }
 }

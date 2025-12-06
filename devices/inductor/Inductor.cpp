@@ -106,7 +106,7 @@ bool Inductor::receiveDeviceParameters(void)
     }
     else
     {
-        std::cout << "Failed to set device parameter, less than 0 value provided for inductance!" << std::endl;
+        qDebug() << "Failed to set device parameter, less than 0 value provided for inductance!" ;
         return false;
     }
 }

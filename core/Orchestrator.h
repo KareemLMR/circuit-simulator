@@ -7,6 +7,7 @@
 #include <atomic>
 #include "ICircuitManager.h"
 #include <functional>
+#include <QDebug>
 
 class Orchestrator
 {

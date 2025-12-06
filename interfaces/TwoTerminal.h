@@ -4,6 +4,7 @@
 #include "Device.h"
 #include <iostream>
 #include <functional>
+#include <QDebug>
 
 class TwoTerminal : public Device
 {

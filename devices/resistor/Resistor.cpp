@@ -63,7 +63,7 @@ void Resistor::setResistance(double r)
 
 void Resistor::prepareForNextStep(double deltaT)
 {
-    std::cout << "Calculating current for resistor" << std::endl;
+    qDebug() << "Calculating current for resistor" ;
     double v1 = getV1();
     double v2 = getV2();
 
@@ -85,7 +85,7 @@ std::map<std::shared_ptr<Node>, double> Resistor::getCurrentCoefficients(const s
     }
     else
     {
-        std::cout << "Invalid node" << std::endl;
+        qDebug() << "Invalid node" ;
         return {};
     }
     return currentCoefficients;
@@ -100,7 +100,7 @@ bool Resistor::receiveDeviceParameters(void)
     }
     else
     {
-        std::cout << "Failed to set device parameter, less than 0 value provided for resistance!" << std::endl;
+        qDebug() << "Failed to set device parameter, less than 0 value provided for resistance!" ;
         return false;
     }
 }

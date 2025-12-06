@@ -128,7 +128,7 @@ void TwoTerminal::routeCurrents(std::shared_ptr<Node> node)
     }
     else
     {
-        std::cout << "Invalid node!" << std::endl;
+        qDebug() << "Invalid node!" ;
     }
 }
 
@@ -144,7 +144,7 @@ double TwoTerminal::getVoltage(const std::shared_ptr<Node>& node)
     }
     else
     {
-        std::cout << "getVoltage: Invalid node" << std::endl;
+        qDebug() << "getVoltage: Invalid node" ;
         return 0.0;
     }
 }
@@ -171,7 +171,7 @@ double TwoTerminal::getCurrent(const std::shared_ptr<Node>& node)
     }
     else
     {
-        std::cout << "getCurrent: Invalid node" << std::endl;
+        qDebug() << "getCurrent: Invalid node" ;
         return 0.0;
     }
 }
@@ -180,7 +180,7 @@ bool TwoTerminal::setDeviceParameters(const std::vector<double>& parameters)
 {
     if (parameters.empty())
     {
-        std::cout << "Failed to set parameters of " << getName() << ", parameters list empty" << std::endl;
+        qDebug() << "Failed to set parameters of " << QString::fromStdString(getName()) << ", parameters list empty" ;
         return false;
     }
     m_parameters = parameters;

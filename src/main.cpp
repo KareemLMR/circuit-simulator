@@ -1,11 +1,14 @@
+#include <QtCore/qcoreapplication.h>
+#include <QDebug>
 #include <iostream>
 #include "Node.h"
 #include <map>
 #include "CircuitManager.h"
 #include "Orchestrator.h"
 
-int main()
+int main(int argc, char* argv[])
 {
+    QCoreApplication a(argc, argv);
     CircuitManager& cm = CircuitManager::getInstance();
     // std::shared_ptr<Node> R11 = std::make_shared<Node>(Node("R11"));
     // std::shared_ptr<Node> R12 = std::make_shared<Node>(Node("R12"));
@@ -84,9 +87,5 @@ int main()
     oc.init(1000.0, 1000000.0, &cm);
     oc.start();
 
-    while (1)
-    {
-
-    }
-    return 0;
+    return a.exec();
 }

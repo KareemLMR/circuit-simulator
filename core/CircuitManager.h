@@ -11,6 +11,7 @@
 #include "ICircuitManager.h"
 #include <boost/dll/import.hpp>
 #include <boost/dll/shared_library.hpp>
+#include <boost/filesystem.hpp>
 
 extern const char* DEVICE_CREATOR_ALIAS;
 
@@ -79,7 +80,7 @@ class CircuitManager : public ICircuitManager
             typedef T*(DeviceFunction)();
             try
             {
-                boost::dll::shared_library library(path, boost::dll::load_mode::append_decorations);
+                boost::dll::shared_library library(path.string(), boost::dll::load_mode::append_decorations);
                 if (!library.is_loaded())
                 {
                     std::cout << "Loading of library " << path << " failed!" << std::endl;
