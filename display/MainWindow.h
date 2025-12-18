@@ -11,6 +11,8 @@ public:
     explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
 
+void onComponentSelected(const QString &componentName);
+
 private:
     Ui::MainWindow* ui;
 };

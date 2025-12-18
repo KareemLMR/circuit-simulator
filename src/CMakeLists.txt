@@ -5,7 +5,9 @@ add_executable(${PROJECT_NAME}
     ${DEVICE_BASE}/TwoTerminal.cpp
     ${CORE_BASE}/Orchestrator.cpp
     ${DISPLAY_BASE}/MainWindow.cpp
-    ${DISPLAY_BASE}/MainWindow.ui)
+    ${DISPLAY_BASE}/MainWindow.ui
+    ${DISPLAY_BASE}/inventory.cpp
+    ${DISPLAY_BASE}/inventory.ui)
 
 include_directories(${Boost_INCLUDE_DIRS})
 

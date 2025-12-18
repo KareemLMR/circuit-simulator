@@ -68,25 +68,25 @@ int main(int argc, char* argv[])
     // cm.connect(R2, C1);
     // cm.connect(C2, V2);
 
-    std::shared_ptr<Node> R1 = std::make_shared<Node>(Node("R1"));
-    std::shared_ptr<Node> R2 = std::make_shared<Node>(Node("R2"));
-    std::shared_ptr<Node> L1 = std::make_shared<Node>(Node("L1"));
-    std::shared_ptr<Node> L2 = std::make_shared<Node>(Node("L2"));
-    std::shared_ptr<Node> V1 = std::make_shared<Node>(Node("V1"));
-    std::shared_ptr<Node> V2 = std::make_shared<Node>(Node("V2"));
+//    std::shared_ptr<Node> R1 = std::make_shared<Node>(Node("R1"));
+//    std::shared_ptr<Node> R2 = std::make_shared<Node>(Node("R2"));
+//    std::shared_ptr<Node> L1 = std::make_shared<Node>(Node("L1"));
+//    std::shared_ptr<Node> L2 = std::make_shared<Node>(Node("L2"));
+//    std::shared_ptr<Node> V1 = std::make_shared<Node>(Node("V1"));
+//    std::shared_ptr<Node> V2 = std::make_shared<Node>(Node("V2"));
 
-    cm.createDevice("resistor", std::make_pair<std::string, std::vector<double>>("r1", {1}), {R1, R2});
-    cm.createDevice("inductor", std::make_pair<std::string, std::vector<double>>("l1", {1e-3}), {L1, L2});
-    cm.createDevice("voltage-source", std::make_pair<std::string, std::vector<double>>("V", {100}), {V1, V2});
+//    cm.createDevice("resistor", std::make_pair<std::string, std::vector<double>>("r1", {1}), {R1, R2});
+//    cm.createDevice("inductor", std::make_pair<std::string, std::vector<double>>("l1", {1e-3}), {L1, L2});
+//    cm.createDevice("voltage-source", std::make_pair<std::string, std::vector<double>>("V", {100}), {V1, V2});
 
-    cm.connect(V2, R1);
-    cm.connect(R2, L1);
-    cm.connect(L2, V1);
+//    cm.connect(V2, R1);
+//    cm.connect(R2, L1);
+//    cm.connect(L2, V1);
 
 
-    Orchestrator& oc = Orchestrator::getInstance();
-    oc.init(1000.0, 1000000.0, &cm);
-    oc.start();
+//    Orchestrator& oc = Orchestrator::getInstance();
+//    oc.init(1000.0, 1000000.0, &cm);
+//    oc.start();
 
     QApplication app(argc, argv);
 
