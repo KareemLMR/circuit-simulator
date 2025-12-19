@@ -4,6 +4,7 @@ add_executable(${PROJECT_NAME}
     ${CORE_BASE}/Node.cpp
     ${DEVICE_BASE}/TwoTerminal.cpp
     ${CORE_BASE}/Orchestrator.cpp
+    ${CORE_BASE}/InventoryManager.cpp
     ${DISPLAY_BASE}/MainWindow.cpp
     ${DISPLAY_BASE}/MainWindow.ui
     ${DISPLAY_BASE}/inventory.cpp

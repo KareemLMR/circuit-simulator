@@ -1,4 +1,6 @@
 #include "inventory.h"
+#include "InventoryManager.h"
+#include "qdebug.h"
 #include "ui_inventory.h"
 
 Inventory::Inventory(QWidget *parent) :
@@ -6,11 +8,19 @@ Inventory::Inventory(QWidget *parent) :
     ui(new Ui::Inventory)
 {
     ui->setupUi(this);
-    ui->inventoryList->addItem("resistor");
-    ui->inventoryList->addItem("capacitor");
-    ui->inventoryList->addItem("inductor");
-    ui->inventoryList->addItem("voltage-source");
-    ui->inventoryList->addItem("current-source");
+    InventoryManager& im = InventoryManager::getInstance();
+
+    if (im.init("../devices/"))
+    {
+        for (auto& device : im.getSupportedDevices())
+        {
+            ui->inventoryList->addItem(QString::fromStdString(device));
+        }
+    }
+    else
+    {
+        qDebug() << "Failed to initialize the InventoryManager!";
+    }
 
     // Connect item click to emit signal
     connect(ui->inventoryList, &QListWidget::itemDoubleClicked,
