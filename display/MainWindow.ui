@@ -22,14 +22,37 @@
    <widget class="QPushButton" name="inventoryButton">
     <property name="geometry">
      <rect>
-      <x>330</x>
-      <y>270</y>
+      <x>500</x>
+      <y>510</y>
       <width>88</width>
       <height>25</height>
      </rect>
     </property>
     <property name="text">
      <string>Inventory</string>
+    </property>
+   </widget>
+   <widget class="QGraphicsView" name="graphicsView">
+    <property name="geometry">
+     <rect>
+      <x>5</x>
+      <y>1</y>
+      <width>791</width>
+      <height>501</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="wiringButton">
+    <property name="geometry">
+     <rect>
+      <x>270</x>
+      <y>510</y>
+      <width>88</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>wiringButton</string>
     </property>
    </widget>
   </widget>

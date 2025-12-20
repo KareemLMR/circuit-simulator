@@ -7,3 +7,10 @@ target_link_libraries(resistor PRIVATE
     Qt5::Concurrent
     Eigen3::Eigen
 )
+
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/devices/resistor)
+configure_file(
+    ${DEVICE_BASE}/resistor/resistor.png
+    ${CMAKE_CURRENT_BINARY_DIR}/resistor.png
+    COPYONLY
+)
