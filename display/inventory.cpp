@@ -1,6 +1,5 @@
 #include "inventory.h"
 #include "InventoryManager.h"
-#include "qdebug.h"
 #include "ui_inventory.h"
 
 Inventory::Inventory(QWidget *parent) :
@@ -25,6 +24,7 @@ Inventory::Inventory(QWidget *parent) :
     // Connect item click to emit signal
     connect(ui->inventoryList, &QListWidget::itemDoubleClicked,
             this, &Inventory::on_listWidget_itemDoubleClicked);
+
 
     // Or if you have an OK button
 //    connect(ui->pushButton_ok, &QPushButton::clicked,

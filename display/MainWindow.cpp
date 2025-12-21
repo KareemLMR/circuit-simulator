@@ -3,6 +3,8 @@
 #include "qdebug.h"
 #include "ui_MainWindow.h"
 
+QVector<QVector<QPointF>> terminals(2);
+
 MainWindow::MainWindow(QWidget* parent) 
     : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);  // Loads the UI from .ui file
@@ -24,15 +26,58 @@ MainWindow::MainWindow(QWidget* parent)
         dialog->show();
     });
 
-    connect(ui->wiringButton, &QPushButton::toggled,
-            this, &MainWindow::on_wiringButton_toggled);
+    connect(ui->wiringButton, &QPushButton::clicked, [this]() {
+        QList<QGraphicsItem*> allItems = ui->graphicsView->scene()->items();
+        QVector<QPointF> terminals1 = getComponentTerminalsInScene((allItems[0]));
+        QVector<QPointF> terminals2 = getComponentTerminalsInScene(qgraphicsitem_cast<QGraphicsPixmapItem*>((allItems[1])));
+
+        QVector<QPointF> sceneTerminals1;
+
+        for (const QPointF& imageTerminal : terminals[0]) {
+            QPointF sceneTerminal = allItems[0]->mapToScene(imageTerminal);
+            sceneTerminals1.append(sceneTerminal);
+        }
+
+        QVector<QPointF> sceneTerminals2;
+
+        for (const QPointF& imageTerminal : terminals[1]) {
+            QPointF sceneTerminal = allItems[1]->mapToScene(imageTerminal);
+            sceneTerminals2.append(sceneTerminal);
+        }
+
+        QGraphicsScene* scene = ui->graphicsView->scene();
+        if (!scene) {
+            qDebug() << "No scene!";
+            return;
+        }
+
+        // Draw line directly in the scene
+        QGraphicsLineItem* wire = new QGraphicsLineItem(sceneTerminals1[0].x(), sceneTerminals1[0].y(), sceneTerminals2[1].x(), sceneTerminals2[1].y());
+        wire->setPen(QPen(Qt::black, 2));
+        scene->addItem(wire);
+
+        qDebug() << "Line drawn from (50,50) to (200,200)";
+    });
 }
 
-QVector<QPointF> MainWindow::analyzeComponentImage(const QString& imagePath)
+QVector<QPointF> MainWindow::getComponentTerminalsInScene(QGraphicsPixmapItem* component)
 {
-    QImage image(imagePath);
-//    if (image.isNull()) return;
+    // 1. Get terminals in image coordinates (pixels)
+    QVector<QPointF> imageTerminals = analyzeComponentImage(component->pixmap().toImage());
 
+    // 2. Convert each to scene coordinates
+    QVector<QPointF> sceneTerminals;
+
+    for (const QPointF& imageTerminal : imageTerminals) {
+        QPointF sceneTerminal = component->mapToScene(imageTerminal);
+        sceneTerminals.append(sceneTerminal);
+    }
+
+    return sceneTerminals;
+}
+
+QVector<QPointF> MainWindow::analyzeComponentImage(const QImage& image)
+{
     QVector<QPointF> terminals;
     int width = image.width();
     int height = image.height();
@@ -88,137 +133,47 @@ QVector<QPointF> MainWindow::analyzeComponentImage(const QString& imagePath)
     return terminals;
 }
 
-void MainWindow::on_wiringButton_toggled(bool checked)
+void MainWindow::onComponentSelected(const QString &componentName)
 {
-    m_wiringMode = checked;
-    m_waitingForSecondClick = false;
+    static int index = 0;
+    qDebug() << "Component selected:" << componentName;
 
-    if (checked) {
-        ui->graphicsView->setCursor(Qt::CrossCursor);
-        qDebug() << "Wiring mode ON";
-    } else {
-        ui->graphicsView->setCursor(Qt::ArrowCursor);
-        qDebug() << "Wiring mode OFF";
-    }
-}
+    QString imagePath = "../devices/" + componentName + "/" + componentName + ".png";
+    QImage image(imagePath);
 
-// Handle mouse clicks
-bool MainWindow::eventFilter(QObject *watched, QEvent *event)
-{
-    // Only handle clicks on the graphics view
-    if (watched != ui->graphicsView->viewport()) {
-        return QMainWindow::eventFilter(watched, event);
-    }
+    // Convert to transparent format
+    image = image.convertToFormat(QImage::Format_ARGB32);
 
-    // Only handle mouse press events
-    if (event->type() != QEvent::MouseButtonPress) {
-        return QMainWindow::eventFilter(watched, event);
-    }
+    // Remove white background (if any)
+    for (int y = 0; y < image.height(); ++y) {
+        QRgb* line = reinterpret_cast<QRgb*>(image.scanLine(y));
+        for (int x = 0; x < image.width(); ++x) {
+            QRgb pixel = line[x];
+            int r = qRed(pixel), g = qGreen(pixel), b = qBlue(pixel);
 
-    QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
-
-    // Only handle left clicks in wiring mode
-    if (mouseEvent->button() != Qt::LeftButton || !m_wiringMode) {
-        return QMainWindow::eventFilter(watched, event);
-    }
-
-    // Get click position in scene coordinates
-    QPointF scenePos = ui->graphicsView->mapToScene(mouseEvent->pos());
-
-    // Find nearest terminal
-    QPointF nearestTerminal = findNearestTerminal(scenePos, 30);
-
-    if (nearestTerminal.isNull()) {
-        qDebug() << "Click on a component terminal";
-        return true;  // Event handled
-    }
-
-    // First or second click?
-    if (!m_waitingForSecondClick) {
-        // First click - store terminal
-        m_firstTerminal = nearestTerminal;
-        m_waitingForSecondClick = true;
-        qDebug() << "First terminal selected:" << nearestTerminal;
-    } else {
-        // Second click - draw wire
-        drawWire(m_firstTerminal, nearestTerminal);
-        m_waitingForSecondClick = false;
-        qDebug() << "Wire drawn from" << m_firstTerminal << "to" << nearestTerminal;
-    }
-
-    return true;  // Event handled
-}
-
-// Find nearest terminal from any component
-QPointF MainWindow::findNearestTerminal(const QPointF &scenePos, qreal maxDistance)
-{
-    QPointF nearestTerminal;
-    qreal minDistance = maxDistance;
-
-    // Get all items in scene
-    QList<QGraphicsItem*> allItems = ui->graphicsView->scene()->items();
-
-    for (QGraphicsItem *item : allItems) {
-        // Check if it's a component (pixmap item)
-        if (QGraphicsPixmapItem *component = qgraphicsitem_cast<QGraphicsPixmapItem*>(item)) {
-            // Get terminals for this component
-            QVector<QPointF> terminals = getComponentTerminals(component);
-
-            // Check each terminal
-            for (const QPointF &terminal : terminals) {
-                qreal distance = QLineF(scenePos, terminal).length();
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    nearestTerminal = terminal;
-                }
+            // If pixel is white (or nearly white), make transparent
+            if (r > 240 && g > 240 && b > 240) {
+                line[x] = qRgba(r, g, b, 0);
             }
         }
     }
 
-    // Return terminal only if within maxDistance
-    return (minDistance < maxDistance) ? nearestTerminal : QPointF();
-}
+    // Create component with transparent image
+    QGraphicsPixmapItem* component = new QGraphicsPixmapItem(QPixmap::fromImage(image));
+    terminals[index] = analyzeComponentImage(image);
+    component->setPos(100, 100);
+    component->setFlag(QGraphicsItem::ItemIsMovable, true);
+    ui->graphicsView->scene()->addItem(component);
 
-// Get terminals for a component (simplified version)
-QVector<QPointF> MainWindow::getComponentTerminals(QGraphicsPixmapItem *component)
-{
-    QVector<QPointF> terminals;
-
-    // For now, just use component bounding box edges
-    // You'll replace this with your edge detection code
-    QRectF bounds = component->boundingRect();
-
-    // Left center (terminal 1)
-    terminals.append(component->mapToScene(bounds.left(), bounds.center().y()));
-
-    // Right center (terminal 2)
-    terminals.append(component->mapToScene(bounds.right(), bounds.center().y()));
-
-    return terminals;
-}
-
-// Draw a wire between two points
-void MainWindow::drawWire(const QPointF &from, const QPointF &to)
-{
-    QGraphicsLineItem *wire = new QGraphicsLineItem(QLineF(from, to));
-    wire->setPen(QPen(Qt::black, 2));
-    ui->graphicsView->scene()->addItem(wire);
-}
-
-void MainWindow::onComponentSelected(const QString &componentName)
-{
-    qDebug() << "Component selected:" << componentName;
-    QGraphicsPixmapItem* component = new QGraphicsPixmapItem();
-
-    QString imagePath = "../devices/" + componentName + "/" + componentName + ".png";
-    analyzeComponentImage(imagePath);
-    component->setPixmap(QPixmap(imagePath));
+    // Optional: Set stacking order
+    component->setZValue(0);
 
     component->setPos(100, 100);
 
     component->setFlag(QGraphicsItem::ItemIsMovable, true);
 
     ui->graphicsView->scene()->addItem(component);
+    index++;
 }
 
 MainWindow::~MainWindow() {

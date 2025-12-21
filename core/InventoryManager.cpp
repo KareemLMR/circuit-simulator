@@ -5,6 +5,7 @@ std::unique_ptr<InventoryManager> InventoryManager::m_instance = nullptr;
 
 InventoryManager::InventoryManager()
 {
+    m_isInitialized.store(false);
 }
 
 InventoryManager& InventoryManager::getInstance(void)
@@ -21,6 +22,11 @@ bool InventoryManager::init(std::string devicesPath)
     bool ret = false;
     struct dirent *entry;
     DIR* dir = opendir(devicesPath.c_str());
+    if (m_isInitialized)
+    {
+        qDebug() << "InventoryManager is already initialized!";
+        m_supportedDevices.clear();
+    }
     if (dir)
     {
         while ((entry = readdir(dir)) != NULL)
@@ -55,6 +61,11 @@ bool InventoryManager::init(std::string devicesPath)
     }
     m_isInitialized.store(ret);
     return ret;
+}
+
+bool InventoryManager::isInitialized(void)
+{
+    return m_isInitialized.load();
 }
 
 std::vector<std::string> InventoryManager::getSupportedDevices(void)

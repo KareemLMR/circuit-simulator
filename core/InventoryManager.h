@@ -7,6 +7,7 @@
 #include <string>
 #include <dirent.h>
 #include <errno.h>
+#include "qdebug.h"
 
 class InventoryManager
 {
@@ -23,6 +24,8 @@ public:
     std::vector<std::string> getSupportedDevices(void);
 
     static InventoryManager& getInstance(void);
+
+    bool isInitialized(void);
 
     ~InventoryManager();
 
