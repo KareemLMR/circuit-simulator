@@ -18,14 +18,14 @@ CircuitManager& CircuitManager::getInstance(void)
     return *m_instance;
 }
 
-bool CircuitManager::createDevice(std::string type,
-                                  const std::pair<std::string, std::vector<double>>& deviceCharacteristics,
-                                  const std::vector<std::shared_ptr<Node>>& pins)
+std::shared_ptr<Device> CircuitManager::createDevice(std::string type,
+                                                     const std::pair<std::string, std::vector<double>>& deviceCharacteristics,
+                                                     const std::vector<std::shared_ptr<Node>>& pins)
 {
     if (m_devices.find(deviceCharacteristics.first) != m_devices.end())
     {
         qDebug() << "Device already exists" ;
-        return false;
+        return nullptr;
     }
 
     boost::filesystem::path libraryPath("../devices/" + type + "/lib" + type + ".so");
@@ -56,7 +56,7 @@ bool CircuitManager::createDevice(std::string type,
         index++;
     }
     m_devices[deviceCharacteristics.first]->updateDeviceState();
-    return true;
+    return m_devices[deviceCharacteristics.first];
 }
 
 bool CircuitManager::connect(const std::shared_ptr<Node>& node1, const std::shared_ptr<Node>& node2)

@@ -13,7 +13,7 @@ Inventory::Inventory(QWidget *parent) :
     {
         for (auto& device : im.getSupportedDevices())
         {
-            ui->inventoryList->addItem(QString::fromStdString(device));
+            ui->inventoryList->addItem(QString::fromStdString(device.first));
         }
     }
     else

@@ -12,9 +12,9 @@ class ICircuitManager
         ICircuitManager(){};
         ~ICircuitManager(){};
 
-        virtual bool createDevice(std::string type,
-                                  const std::pair<std::string, std::vector<double>>& deviceCharacteristics,
-                                  const std::vector<std::shared_ptr<Node>>& pins = {}) = 0;
+        virtual std::shared_ptr<Device> createDevice(std::string type,
+                                                     const std::pair<std::string, std::vector<double>>& deviceCharacteristics,
+                                                     const std::vector<std::shared_ptr<Node>>& pins = {}) = 0;
 
         virtual bool connect(const std::shared_ptr<Node>& node1, const std::shared_ptr<Node>& node2) = 0;
         virtual bool isConnected(const std::shared_ptr<Node>& node1, const std::shared_ptr<Node>& node2) = 0;

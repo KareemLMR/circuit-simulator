@@ -37,9 +37,9 @@ class CircuitManager : public ICircuitManager
 
         static CircuitManager& getInstance(void);
 
-        bool createDevice(std::string type,
-                          const std::pair<std::string, std::vector<double>>& deviceCharacteristics,
-                          const std::vector<std::shared_ptr<Node>>& pins = {}) override;
+        std::shared_ptr<Device> createDevice(std::string type,
+                                             const std::pair<std::string, std::vector<double>>& deviceCharacteristics,
+                                             const std::vector<std::shared_ptr<Node>>& pins = {}) override;
 
         bool connect(const std::shared_ptr<Node>& node1, const std::shared_ptr<Node>& node2) override;
         bool isConnected(const std::shared_ptr<Node>& node1, const std::shared_ptr<Node>& node2) override;

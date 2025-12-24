@@ -21,7 +21,7 @@ public:
     InventoryManager& operator=(const InventoryManager&& other) = delete;
 
     bool init(std::string devicesPath);
-    std::vector<std::string> getSupportedDevices(void);
+    std::map<std::string,int>& getSupportedDevices(void);
 
     static InventoryManager& getInstance(void);
 
@@ -31,7 +31,7 @@ public:
 
 private:
     static std::unique_ptr<InventoryManager> m_instance;
-    std::vector<std::string> m_supportedDevices;
+    std::map<std::string, int> m_supportedDevices;
     std::atomic<bool> m_isInitialized;
 };
 

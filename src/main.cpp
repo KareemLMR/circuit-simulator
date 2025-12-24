@@ -10,7 +10,7 @@
 
 int main(int argc, char* argv[])
 {
-    CircuitManager& cm = CircuitManager::getInstance();
+//    CircuitManager& cm = CircuitManager::getInstance();
     // std::shared_ptr<Node> R11 = std::make_shared<Node>(Node("R11"));
     // std::shared_ptr<Node> R12 = std::make_shared<Node>(Node("R12"));
     // std::shared_ptr<Node> R21 = std::make_shared<Node>(Node("R21"));

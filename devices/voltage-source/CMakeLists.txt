@@ -7,3 +7,10 @@ target_link_libraries(voltage-source PRIVATE
     Qt5::Concurrent
     Eigen3::Eigen
 )
+
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/devices/voltage-source)
+configure_file(
+    ${DEVICE_BASE}/voltage-source/voltage-source.png
+    ${CMAKE_CURRENT_BINARY_DIR}/voltage-source.png
+    COPYONLY
+)

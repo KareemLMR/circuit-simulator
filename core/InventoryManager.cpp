@@ -48,7 +48,7 @@ bool InventoryManager::init(std::string devicesPath)
                 if ((file = fopen(lib.c_str(), "r")) != NULL)
                 {
                     fclose(file);
-                    m_supportedDevices.push_back(entry->d_name);
+                    m_supportedDevices[entry->d_name]++;
                 }
             }
         }
@@ -68,7 +68,7 @@ bool InventoryManager::isInitialized(void)
     return m_isInitialized.load();
 }
 
-std::vector<std::string> InventoryManager::getSupportedDevices(void)
+std::map<std::string, int>& InventoryManager::getSupportedDevices(void)
 {
     return m_supportedDevices;
 }

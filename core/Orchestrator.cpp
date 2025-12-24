@@ -73,12 +73,12 @@ void Orchestrator::orchestrate(void)
     while (true)
     {
         m_circuitManager->solveCircuit(1.0 / m_circuitRefreshFrequency);
-        for (auto& node : m_circuitManager->queryDeviceVoltages("l1").second)
+        for (auto& node : m_circuitManager->queryDeviceVoltages("resistor1").second)
         {
             qDebug() << node->getVolt() ;
         }
 
-        for (auto& path : m_circuitManager->queryDeviceCurrents("l1"))
+        for (auto& path : m_circuitManager->queryDeviceCurrents("resistor1"))
         {
             qDebug() << "Node " << QString::fromStdString(path.first->getName()) << " current = " << path.second ;
         }
