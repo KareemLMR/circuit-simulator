@@ -279,7 +279,9 @@ void MainWindow::onComponentSelected(const QString &componentName)
     {
         for (int i = 0 ; i < dev->getPins().size() ; i++)
         {
-            m_nodesPointMap[std::make_pair(terminals[index][i].x(),terminals[index][i].y())] = dev->getPins()[i];
+            QPointF sceneTerminal = component->mapToScene(terminals[index][i]);
+            m_nodesPointMap[std::make_pair(sceneTerminal.x(), sceneTerminal.y())] = dev->getPins()[i];
+            qDebug() << "Saving node " << QString::fromStdString(dev->getPins()[i]->getName()) << " into " << sceneTerminal.x() << sceneTerminal.y();
         }
     }
     index++;
