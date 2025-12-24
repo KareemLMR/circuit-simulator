@@ -31,12 +31,14 @@ bool eventFilter(QObject *watched, QEvent *event);
 private:
     Ui::MainWindow* ui;
     bool m_wiringMode;
-    int m_wiringClicksCounter;
+    bool m_waitingToDrop;
+    bool m_startWiringPosDetermined;
     std::map<QGraphicsPixmapItem*, QVector<QGraphicsLineItem*>> m_componentsWires;
-    QPointF currentWireStartPoint;
-    QPointF currentWireEndPoint;
+    std::pair<std::shared_ptr<Node>, QPointF> m_currentWireStartPoint;
+    std::pair<std::shared_ptr<Node>, QPointF> m_currentWireEndPoint;
+    QPointF m_deltaDistByComponent;
     CircuitManager& cm;
     Orchestrator& oc;
     InventoryManager& im;
-    std::map<std::pair<double, double>, std::shared_ptr<Node>> m_nodesPointMap;
+    std::map<QGraphicsPixmapItem*, std::map<std::shared_ptr<Node>, QPointF>> m_componentsNodesMap;
 };

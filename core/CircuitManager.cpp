@@ -444,20 +444,20 @@ void CircuitManager::solveCircuit(double deltaT)
     // Step 1: Calculate the circuit matrix
     calculateCircuitMatrix(deltaT);
 
-    for (auto& row : m_circuitMatrix)
-    {
-        for (auto e : row)
-        {
-            qDebug() << e << " ";
-        }
-        qDebug() ;
-    }
+//    for (auto& row : m_circuitMatrix)
+//    {
+//        for (auto e : row)
+//        {
+//            qDebug() << e << " ";
+//        }
+//        qDebug() ;
+//    }
 
-    for (auto e : m_results)
-    {
-        qDebug() << e << " ";
-    }
-    qDebug() ;
+//    for (auto e : m_results)
+//    {
+//        qDebug() << e << " ";
+//    }
+//    qDebug() ;
 
     // Step 3: Map into Eigen::MatrixXd (RowMajor for correct layout)
     Eigen::MatrixXd A = convert2DVectorToMatrix(getCircuitMatrix());

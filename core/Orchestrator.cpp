@@ -6,6 +6,8 @@ std::unique_ptr<Orchestrator> Orchestrator::m_instance = nullptr;
 
 Orchestrator::Orchestrator()
 {
+    m_userInterfaceClockFrequency = 1.0;
+    m_userInterfaceClockFrequency = 1.0;
 }
 
 Orchestrator& Orchestrator::getInstance(void)
@@ -19,12 +21,12 @@ Orchestrator& Orchestrator::getInstance(void)
 
 bool Orchestrator::init(double userInterfaceClockFrequency, double circuitRefreshFrequency, ICircuitManager* circuitManager)
 {
-    if (m_isInitialized)
-    {
-        qDebug() << "Orchestrator is already initialized!" ;
-    }
-    else
-    {
+//    if (m_isInitialized)
+//    {
+//        qDebug() << "Orchestrator is already initialized!" ;
+//    }
+//    else
+//    {
         if (circuitManager == nullptr)
         {
             qDebug() << "Circuit Manager is not initialized!" ;
@@ -50,7 +52,7 @@ bool Orchestrator::init(double userInterfaceClockFrequency, double circuitRefres
         m_circuitRefreshFrequency = circuitRefreshFrequency;
         m_circuitManager = circuitManager;
         m_isInitialized = true;
-    }
+//    }
     
 
     return true;

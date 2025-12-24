@@ -25,7 +25,6 @@ bool InventoryManager::init(std::string devicesPath)
     if (m_isInitialized)
     {
         qDebug() << "InventoryManager is already initialized!";
-        m_supportedDevices.clear();
     }
     if (dir)
     {
