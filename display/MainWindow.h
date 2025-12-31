@@ -33,14 +33,17 @@ private:
     bool m_wiringMode;
     bool m_waitingToDrop;
     bool m_startWiringPosDetermined;
+    bool m_wiringPivotPointChanged;
     std::map<QGraphicsPixmapItem*, QVector<QGraphicsLineItem*>> m_componentsWires;
     std::pair<std::shared_ptr<Node>, QPointF> m_currentWireStartPoint;
     std::pair<std::shared_ptr<Node>, QPointF> m_currentWireEndPoint;
     QGraphicsLineItem* m_currentWire1;
     QGraphicsLineItem* m_currentWire2;
+    QVector<QPointF> m_currentWire;
     QPointF m_deltaDistByComponent;
     CircuitManager& cm;
     Orchestrator& oc;
     InventoryManager& im;
     std::map<QGraphicsPixmapItem*, std::map<std::shared_ptr<Node>, QPointF>> m_componentsNodesMap;
+    std::map<std::shared_ptr<Node>, QVector<QVector<QPointF>>> m_wiresMap;
 };

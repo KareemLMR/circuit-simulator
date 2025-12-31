@@ -33,6 +33,12 @@ MainWindow::MainWindow(QWidget* parent)
 
     connect(ui->wiringButton, &QPushButton::clicked, [this]() {
         m_wiringMode = !m_wiringMode;
+
+        QList<QGraphicsItem*> items = ui->graphicsView->items();
+        for (auto& item : items)
+        {
+            item->setFlag(QGraphicsItem::ItemIsMovable, !m_wiringMode);
+        }
     });
 
     connect(ui->simulation, &QPushButton::clicked, [this]() {
@@ -44,6 +50,7 @@ MainWindow::MainWindow(QWidget* parent)
     m_wiringMode = false;
     m_waitingToDrop = false;
     m_startWiringPosDetermined = false;
+    m_wiringPivotPointChanged = false;
     m_currentWire1 = nullptr;
     m_currentWire2 = nullptr;
 }
@@ -62,11 +69,26 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
             // Get the top-most item at the click position
             QGraphicsItem* clickedItem = ui->graphicsView->scene()->itemAt(scenePos,
                                                                            ui->graphicsView->transform());
-            if (clickedItem)
+            QList<QGraphicsItem*> items = ui->graphicsView->scene()->items(scenePos);
+            QList<QGraphicsItem*> wires;
+
+            // Filter out wires and temporary items
+            items.erase(std::remove_if(items.begin(), items.end(),
+                                       [&wires](QGraphicsItem* item) {
+                                           // Remove wires
+                                        if (item->type() == QGraphicsLineItem::Type)
+                                           {
+                                               wires.append(item);
+                                               return true;
+                                           }
+                                           return false;
+                                       }), items.end());
+
+            if (items.size() > 0 && items[0]->type() == QGraphicsPixmapItem::Type)
             {
-                qDebug() << "Clicked item type:" << typeid(*clickedItem).name();
-                qDebug() << "Clicked item position:" << clickedItem->pos();
-                QGraphicsPixmapItem* pixmapItem = dynamic_cast<QGraphicsPixmapItem*>(clickedItem);
+                qDebug() << "Clicked item type:" << typeid(items[0]).name();
+                qDebug() << "Clicked item position:" << items[0]->pos();
+                QGraphicsPixmapItem* pixmapItem = dynamic_cast<QGraphicsPixmapItem*>(items[0]);
                 if (pixmapItem && !m_wiringMode)
                 {
                     m_waitingToDrop = true;
@@ -107,10 +129,66 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
                         ui->graphicsView->scene()->addItem(wire2);
 //                        ui->graphicsView->scene()->addItem(wire);
                         cm.connect(m_currentWireStartPoint.first, m_currentWireEndPoint.first);
+                        m_currentWire.push_front(m_currentWireStartPoint.second);
+                        m_currentWire.push_back(mouseEvent->pos());
+                        m_wiresMap[m_currentWireStartPoint.first].append(m_currentWire);
+                        m_currentWire.clear();
+                        m_wiringPivotPointChanged = false;
                     }
                     m_startWiringPosDetermined = !m_startWiringPosDetermined;
                 }
             }
+            else if ((wires.size() >= 2 && wires[1]->type() == QGraphicsLineItem::Type))/* ||
+                       ((!m_startWiringPosDetermined) && (wires.size() >= 1 && wires[0]->type() == QGraphicsLineItem::Type)))*/
+            {
+                for (const auto& node : m_wiresMap)
+                {
+                    for (const auto& segment : node.second)
+
+                        for (uint8_t i = 0 ; i < segment.size() - 1 ; i++)
+                        {
+                            QGraphicsLineItem* seg = static_cast<QGraphicsLineItem*>(wires[1]);
+                            if ((seg->line().p1() == segment[i]) && (seg->line().p2() == segment[i + 1]))
+                            {
+                                if (!m_startWiringPosDetermined)
+                                {
+                                    m_currentWireStartPoint = std::make_pair(node.first, mouseEvent->pos());
+                                }
+                                else
+                                {
+                                    m_currentWireEndPoint = std::make_pair(node.first, mouseEvent->pos());
+                                }
+                            }
+                        }
+
+                }
+                if (m_startWiringPosDetermined)
+                {
+                    qDebug() << "Wiring...";
+                    QGraphicsLineItem* wire1 = new QGraphicsLineItem(m_currentWire1->line().p1().x(), m_currentWire1->line().p1().y(), m_currentWire1->line().p2().x(), m_currentWire1->line().p2().y());
+                    QGraphicsLineItem* wire2 = new QGraphicsLineItem(m_currentWire2->line().p1().x(), m_currentWire2->line().p1().y(), m_currentWire2->line().p2().x(), m_currentWire2->line().p2().y());
+                    //                        QGraphicsLineItem* wire = new QGraphicsLineItem(m_currentWireStartPoint.second.x(), m_currentWireStartPoint.second.y(), m_currentWireEndPoint.second.x(), m_currentWireEndPoint.second.y());
+                    wire1->setPen(QPen(Qt::blue, 2));
+                    wire2->setPen(QPen(Qt::blue, 2));
+                    //                        wire->setPen(QPen(Qt::blue, 2));
+                    ui->graphicsView->scene()->addItem(wire1);
+                    ui->graphicsView->scene()->addItem(wire2);
+                    //                        ui->graphicsView->scene()->addItem(wire);
+                    cm.connect(m_currentWireStartPoint.first, m_currentWireEndPoint.first);
+                    m_currentWire.push_front(m_currentWireStartPoint.second);
+                    m_currentWire.push_back(mouseEvent->pos());
+                    m_wiresMap[m_currentWireStartPoint.first].append(m_currentWire);
+                    m_currentWire.clear();
+                    m_wiringPivotPointChanged = false;
+                }
+                m_startWiringPosDetermined = !m_startWiringPosDetermined;
+            }
+            else if (clickedItem && clickedItem->type() == QGraphicsLineItem::Type)
+            {
+                m_currentWire.push_back(mouseEvent->pos());
+                m_wiringPivotPointChanged = true;
+            }
+
             qDebug() << "Mouse PRESSED at:" << mouseEvent->pos();
             break;
         }
@@ -190,45 +268,51 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
                     );
                 if (m_wiringMode && m_startWiringPosDetermined)
                 {
-                    if (m_currentWire1)
+                    if (m_currentWire1 && !m_wiringPivotPointChanged)
                     {
                         qDebug() << "Clearing m_currentWire1";
                         ui->graphicsView->scene()->removeItem(m_currentWire1);
                         delete m_currentWire1;
                         m_currentWire1 = nullptr;
                     }
-                    if (m_currentWire2)
+                    if (m_currentWire2 && !m_wiringPivotPointChanged)
                     {
                         qDebug() << "Clearing m_currentWire2";
                         ui->graphicsView->scene()->removeItem(m_currentWire2);
                         delete m_currentWire2;
                         m_currentWire2 = nullptr;
                     }
-                    QLineF line(m_currentWireStartPoint.second, scenePos);
+                    QPointF startPoint = (m_currentWire.size() == 0) ? m_currentWireStartPoint.second : m_currentWire[m_currentWire.size() - 1];
+                    QLineF line(startPoint, scenePos);
+
                     if (line.angle() < 45.0 || line.angle() > 135.0)
                     {
-                        m_currentWire1 = new QGraphicsLineItem(m_currentWireStartPoint.second.x(), m_currentWireStartPoint.second.y(), scenePos.x(), m_currentWireStartPoint.second.y());
-                        m_currentWire2 = new QGraphicsLineItem(scenePos.x(), m_currentWireStartPoint.second.y(), scenePos.x(), scenePos.y());
+                        m_currentWire1 = new QGraphicsLineItem(startPoint.x(), startPoint.y(), scenePos.x(), startPoint.y());
+                        m_currentWire2 = new QGraphicsLineItem(scenePos.x(), startPoint.y(), scenePos.x(), scenePos.y());
                     }
                     else
                     {
-                        m_currentWire1 = new QGraphicsLineItem(m_currentWireStartPoint.second.x(), m_currentWireStartPoint.second.y(), m_currentWireStartPoint.second.x(), scenePos.y());
-                        m_currentWire2 = new QGraphicsLineItem(m_currentWireStartPoint.second.x(), scenePos.y(), scenePos.x(), scenePos.y());
+                        m_currentWire1 = new QGraphicsLineItem(startPoint.x(), startPoint.y(), startPoint.x(), scenePos.y());
+                        m_currentWire2 = new QGraphicsLineItem(startPoint.x(), scenePos.y(), scenePos.x(), scenePos.y());
                     }
 
                     m_currentWire1->setPen(QPen(Qt::blue, 2));
                     m_currentWire2->setPen(QPen(Qt::blue, 2));
 
-                    m_currentWire1->setFlag(QGraphicsItem::ItemIsSelectable, false);
-                    m_currentWire1->setAcceptedMouseButtons(Qt::NoButton);
-                    m_currentWire1->setZValue(-1);
+//                    m_currentWire1->setFlag(QGraphicsItem::ItemIsSelectable, false);
+//                    m_currentWire1->setAcceptedMouseButtons(Qt::NoButton);
+//                    m_currentWire1->setZValue(-1);
 
-                    m_currentWire2->setFlag(QGraphicsItem::ItemIsSelectable, false);
-                    m_currentWire2->setAcceptedMouseButtons(Qt::NoButton);
-                    m_currentWire2->setZValue(-2);
+//                    m_currentWire2->setFlag(QGraphicsItem::ItemIsSelectable, false);
+//                    m_currentWire2->setAcceptedMouseButtons(Qt::NoButton);
+//                    m_currentWire2->setZValue(-2);
 
                     ui->graphicsView->scene()->addItem(m_currentWire1);
                     ui->graphicsView->scene()->addItem(m_currentWire2);
+                    if (m_wiringPivotPointChanged)
+                    {
+                        m_wiringPivotPointChanged = false;
+                    }
                 }
             }
             break;
@@ -337,18 +421,18 @@ void MainWindow::onComponentSelected(const QString &componentName)
     image = image.convertToFormat(QImage::Format_ARGB32);
 
     // Remove white background (if any)
-    for (int y = 0; y < image.height(); ++y) {
-        QRgb* line = reinterpret_cast<QRgb*>(image.scanLine(y));
-        for (int x = 0; x < image.width(); ++x) {
-            QRgb pixel = line[x];
-            int r = qRed(pixel), g = qGreen(pixel), b = qBlue(pixel);
+//    for (int y = 0; y < image.height(); ++y) {
+//        QRgb* line = reinterpret_cast<QRgb*>(image.scanLine(y));
+//        for (int x = 0; x < image.width(); ++x) {
+//            QRgb pixel = line[x];
+//            int r = qRed(pixel), g = qGreen(pixel), b = qBlue(pixel);
 
-            // If pixel is white (or nearly white), make transparent
-            if (r > 240 && g > 240 && b > 240) {
-                line[x] = qRgba(r, g, b, 0);
-            }
-        }
-    }
+//            // If pixel is white (or nearly white), make transparent
+//            if (r > 240 && g > 240 && b > 240) {
+//                line[x] = qRgba(r, g, b, 0);
+//            }
+//        }
+//    }
 
     // Create component with transparent image
     QGraphicsPixmapItem* component = new QGraphicsPixmapItem(QPixmap::fromImage(image));
