@@ -11,6 +11,11 @@ MainWindow::MainWindow(QWidget* parent)
     QGraphicsScene *scene = new QGraphicsScene(this);
     ui->graphicsView->setScene(scene);
     scene->setSceneRect(0, 0, 800, 600);
+
+    ui->graphicsView->viewport()->setMouseTracking(true);
+
+    ui->graphicsView->setMouseTracking(true);
+
     ui->graphicsView->viewport()->installEventFilter(this);
 
     qDebug() << "GraphicsView created:" << ui->graphicsView;
@@ -39,124 +44,9 @@ MainWindow::MainWindow(QWidget* parent)
     m_wiringMode = false;
     m_waitingToDrop = false;
     m_startWiringPosDetermined = false;
-//    connect(ui->wiringButton, &QPushButton::clicked, [this]() {
-//        QList<QGraphicsItem*> allItems = ui->graphicsView->scene()->items();
-//        QVector<QPointF> terminals1 = getComponentTerminalsInScene((allItems[0]));
-//        QVector<QPointF> terminals2 = getComponentTerminalsInScene(qgraphicsitem_cast<QGraphicsPixmapItem*>((allItems[1])));
-
-//        QVector<QPointF> sceneTerminals1;
-
-//        for (const QPointF& imageTerminal : terminals[0]) {
-//            QPointF sceneTerminal = allItems[0]->mapToScene(imageTerminal);
-//            sceneTerminals1.append(sceneTerminal);
-//        }
-
-//        QVector<QPointF> sceneTerminals2;
-
-//        for (const QPointF& imageTerminal : terminals[1]) {
-//            QPointF sceneTerminal = allItems[1]->mapToScene(imageTerminal);
-//            sceneTerminals2.append(sceneTerminal);
-//        }
-
-//        QGraphicsScene* scene = ui->graphicsView->scene();
-//        if (!scene) {
-//            qDebug() << "No scene!";
-//            return;
-//        }
-
-//        // Draw line directly in the scene
-//        QGraphicsLineItem* wire = new QGraphicsLineItem(sceneTerminals1[0].x(), sceneTerminals1[0].y(), sceneTerminals2[1].x(), sceneTerminals2[1].y());
-//        wire->setPen(QPen(Qt::black, 2));
-//        scene->addItem(wire);
-
-//        qDebug() << "Line drawn from (50,50) to (200,200)";
-//    });
+    m_currentWire1 = nullptr;
+    m_currentWire2 = nullptr;
 }
-
-//bool MainWindow::eventFilter(QObject *watched, QEvent *event)
-//{
-//    if (watched == ui->graphicsView->viewport() &&
-//        event->type() == QEvent::MouseButtonPress)
-//    {
-//        QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
-//        QPointF scenePos = ui->graphicsView->mapToScene(mouseEvent->pos());
-
-//        qDebug() << "Scene position:" << scenePos.x() << "," << scenePos.y();
-
-//        // Create a simple circle at click position
-//        if (!ui->graphicsView->scene()) {
-//            ui->graphicsView->setScene(new QGraphicsScene(this));
-//        }
-////        ui->graphicsView->scene()->addEllipse(
-////            scenePos.x() - 5, scenePos.y() - 5, 10, 10,
-////            QPen(Qt::red), QBrush(Qt::blue));
-//        if (m_wiringMode)
-//        {
-//            m_wiringClicksCounter++;
-//            uint64_t smallest_d = std::numeric_limits<uint64_t>::max();;
-//            QPointF nearestNode;
-
-//            QList<QGraphicsItem*> allItems = ui->graphicsView->scene()->items();
-
-//            // We need to match terminals with their corresponding items
-//            // Assuming terminals[i] corresponds to the i-th component item
-//            int componentIndex = 0;
-
-//            for (int i = 0; i < allItems.size() && componentIndex < terminals.size(); i++)
-//            {
-//                QGraphicsItem* item = allItems[i];
-
-//                // Skip wire items
-//                if (QGraphicsLineItem* wire = dynamic_cast<QGraphicsLineItem*>(item)) {
-//                    continue; // Skip wires
-//                }
-
-//                // Only process if we have terminals for this component
-//                if (componentIndex < terminals.size()) {
-//                    auto terminal = terminals[componentIndex];
-
-//                    for (int j = 0; j < terminal.size(); j++)
-//                    {
-//                        auto imageTerminal = terminal[j];
-//                        QPointF sceneTerminal = item->mapToScene(imageTerminal);
-//                        qDebug() << "Processing terminal" << j << "of component" << componentIndex << ":" << sceneTerminal;
-
-//                        uint64_t d = (sceneTerminal.x() - scenePos.x()) * (sceneTerminal.x() - scenePos.x()) +
-//                                (sceneTerminal.y() - scenePos.y()) * (sceneTerminal.y() - scenePos.y());
-//                        if (d < smallest_d)
-//                        {
-//                            smallest_d = d;
-//                            nearestNode = sceneTerminal;
-//                        }
-//                    }
-//                    componentIndex++;
-//                }
-//            }
-//            QGraphicsScene* scene = ui->graphicsView->scene();
-//            if (!scene) {
-//                qDebug() << "No scene!";
-//            }
-//            if (m_wiringClicksCounter % 2)
-//            {
-//                qDebug() << "First click detected " << nearestNode.x() << ", " << nearestNode.y();
-//                currentWireStartPoint = nearestNode;
-//            }
-//            else
-//            {
-//                qDebug() << "Second click detected " << nearestNode.x() << ", " << nearestNode.y();
-//                currentWireEndPoint = nearestNode;
-//                QGraphicsLineItem* wire = new QGraphicsLineItem(currentWireStartPoint.x(), currentWireStartPoint.y(), currentWireEndPoint.x(), currentWireEndPoint.y());
-//                wire->setPen(QPen(Qt::black, 2));
-//                scene->addItem(wire);
-//                cm.connect(m_nodesPointMap[std::make_pair(currentWireStartPoint.x(), currentWireStartPoint.y())], m_nodesPointMap[std::make_pair(currentWireEndPoint.x(), currentWireEndPoint.y())]);
-//            }
-//        }
-//    }
-
-
-
-//    return QMainWindow::eventFilter(watched, event);
-//}
 
 bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 {
@@ -207,9 +97,15 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
                     if (m_startWiringPosDetermined)
                     {
                         qDebug() << "Wiring...";
-                        QGraphicsLineItem* wire = new QGraphicsLineItem(m_currentWireStartPoint.second.x(), m_currentWireStartPoint.second.y(), m_currentWireEndPoint.second.x(), m_currentWireEndPoint.second.y());
-                        wire->setPen(QPen(Qt::black, 2));
-                        ui->graphicsView->scene()->addItem(wire);
+                        QGraphicsLineItem* wire1 = new QGraphicsLineItem(m_currentWire1->line().p1().x(), m_currentWire1->line().p1().y(), m_currentWire1->line().p2().x(), m_currentWire1->line().p2().y());
+                        QGraphicsLineItem* wire2 = new QGraphicsLineItem(m_currentWire2->line().p1().x(), m_currentWire2->line().p1().y(), m_currentWire2->line().p2().x(), m_currentWire2->line().p2().y());
+//                        QGraphicsLineItem* wire = new QGraphicsLineItem(m_currentWireStartPoint.second.x(), m_currentWireStartPoint.second.y(), m_currentWireEndPoint.second.x(), m_currentWireEndPoint.second.y());
+                        wire1->setPen(QPen(Qt::blue, 2));
+                        wire2->setPen(QPen(Qt::blue, 2));
+//                        wire->setPen(QPen(Qt::blue, 2));
+                        ui->graphicsView->scene()->addItem(wire1);
+                        ui->graphicsView->scene()->addItem(wire2);
+//                        ui->graphicsView->scene()->addItem(wire);
                         cm.connect(m_currentWireStartPoint.first, m_currentWireEndPoint.first);
                     }
                     m_startWiringPosDetermined = !m_startWiringPosDetermined;
@@ -276,12 +172,64 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 
         case QEvent::MouseMove:
         {
+            // Convert to scene coordinates
             QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
+            QPointF scenePos = ui->graphicsView->mapToScene(mouseEvent->pos());
 
-            // Check if left button is pressed during movement
             if (mouseEvent->buttons() & Qt::LeftButton) {
-                qDebug() << "Mouse MOVING while pressed at:" << mouseEvent->pos();
-//                handleMouseDrag(mouseEvent);
+                qDebug() << "Mouse DRAGGING at scene:" << scenePos;
+                // handleMouseDrag(mouseEvent);
+            }
+            else {
+                qDebug() << "Mouse MOVING (no buttons) at scene:" << scenePos;
+                // handleMouseHover(mouseEvent);
+
+                // Optional: Update status bar with cursor position
+                ui->statusbar->showMessage(
+                    QString("Cursor: %1, %2").arg(scenePos.x()).arg(scenePos.y())
+                    );
+                if (m_wiringMode && m_startWiringPosDetermined)
+                {
+                    if (m_currentWire1)
+                    {
+                        qDebug() << "Clearing m_currentWire1";
+                        ui->graphicsView->scene()->removeItem(m_currentWire1);
+                        delete m_currentWire1;
+                        m_currentWire1 = nullptr;
+                    }
+                    if (m_currentWire2)
+                    {
+                        qDebug() << "Clearing m_currentWire2";
+                        ui->graphicsView->scene()->removeItem(m_currentWire2);
+                        delete m_currentWire2;
+                        m_currentWire2 = nullptr;
+                    }
+                    QLineF line(m_currentWireStartPoint.second, scenePos);
+                    if (line.angle() < 45.0 || line.angle() > 135.0)
+                    {
+                        m_currentWire1 = new QGraphicsLineItem(m_currentWireStartPoint.second.x(), m_currentWireStartPoint.second.y(), scenePos.x(), m_currentWireStartPoint.second.y());
+                        m_currentWire2 = new QGraphicsLineItem(scenePos.x(), m_currentWireStartPoint.second.y(), scenePos.x(), scenePos.y());
+                    }
+                    else
+                    {
+                        m_currentWire1 = new QGraphicsLineItem(m_currentWireStartPoint.second.x(), m_currentWireStartPoint.second.y(), m_currentWireStartPoint.second.x(), scenePos.y());
+                        m_currentWire2 = new QGraphicsLineItem(m_currentWireStartPoint.second.x(), scenePos.y(), scenePos.x(), scenePos.y());
+                    }
+
+                    m_currentWire1->setPen(QPen(Qt::blue, 2));
+                    m_currentWire2->setPen(QPen(Qt::blue, 2));
+
+                    m_currentWire1->setFlag(QGraphicsItem::ItemIsSelectable, false);
+                    m_currentWire1->setAcceptedMouseButtons(Qt::NoButton);
+                    m_currentWire1->setZValue(-1);
+
+                    m_currentWire2->setFlag(QGraphicsItem::ItemIsSelectable, false);
+                    m_currentWire2->setAcceptedMouseButtons(Qt::NoButton);
+                    m_currentWire2->setZValue(-2);
+
+                    ui->graphicsView->scene()->addItem(m_currentWire1);
+                    ui->graphicsView->scene()->addItem(m_currentWire2);
+                }
             }
             break;
         }

@@ -36,6 +36,8 @@ private:
     std::map<QGraphicsPixmapItem*, QVector<QGraphicsLineItem*>> m_componentsWires;
     std::pair<std::shared_ptr<Node>, QPointF> m_currentWireStartPoint;
     std::pair<std::shared_ptr<Node>, QPointF> m_currentWireEndPoint;
+    QGraphicsLineItem* m_currentWire1;
+    QGraphicsLineItem* m_currentWire2;
     QPointF m_deltaDistByComponent;
     CircuitManager& cm;
     Orchestrator& oc;
