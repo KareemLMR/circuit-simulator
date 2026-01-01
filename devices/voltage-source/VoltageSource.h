@@ -25,6 +25,7 @@ class DEVICE_API VoltageSource : public TwoTerminal
         std::map<std::shared_ptr<Node>, double> getCurrentCoefficients(const std::shared_ptr<Node>& node, double deltaT) override { return {}; };
         void prepareForNextStep(double deltaT) override {};
         bool receiveDeviceParameters(void) override;
+        std::map<std::string, double> getRequiredParameters(void) override;
 
         ~VoltageSource();
 };

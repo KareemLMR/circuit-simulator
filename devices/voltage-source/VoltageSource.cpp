@@ -56,8 +56,13 @@ VoltageSource& VoltageSource::operator=(const VoltageSource&& voltageSource)
 
 bool VoltageSource::receiveDeviceParameters(void)
 {
-    setVoltage(m_parameters[0]);
+    setVoltage(m_parameters["voltage"]);
     return true;
+}
+
+std::map<std::string, double> VoltageSource::getRequiredParameters(void)
+{
+    return {{"voltage", 100.0}};
 }
 
 VoltageSource::~VoltageSource()

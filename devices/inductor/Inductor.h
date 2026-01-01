@@ -32,6 +32,7 @@ class DEVICE_API Inductor : public TwoTerminal
         bool isVoltageSupply() override { return false; }
         bool isCurrentSupply() override { return true; }
         bool receiveDeviceParameters(void) override;
+        std::map<std::string, double> getRequiredParameters(void) override;
 
         ~Inductor();
     private:

@@ -34,14 +34,14 @@ class TwoTerminal : public Device
         double getVoltage(void);
         void setVoltage(double v);
         double getCurrent(const std::shared_ptr<Node>& node) override;
-        bool setDeviceParameters(const std::vector<double>& parameters) override;
+        bool setDeviceParameters(const std::map<std::string, double>& parameters) override;
         virtual bool receiveDeviceParameters(void) = 0;
 
         virtual ~TwoTerminal();
 
     protected:
         double m_v, m_i;
-        std::vector<double> m_parameters;
+        const std::map<std::string, double> m_parameters;
 
     private:
         double m_v1, m_v2;

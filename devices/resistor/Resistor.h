@@ -27,6 +27,7 @@ class DEVICE_API Resistor : public TwoTerminal
         bool isVoltageSupply() override { return false; }
         bool isCurrentSupply() override { return false; }
         bool receiveDeviceParameters(void) override;
+        std::map<std::string, double> getRequiredParameters(void) override;
 
         ~Resistor();
     private:

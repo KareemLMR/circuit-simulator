@@ -55,7 +55,8 @@ class DEVICE_API Device
         virtual double getCurrent(const std::shared_ptr<Node>& node) = 0;
         virtual void prepareForNextStep(double deltaT) = 0;
         virtual void routeCurrents(std::shared_ptr<Node> node) = 0;
-        virtual bool setDeviceParameters(const std::vector<double>& parameters) = 0;
+        virtual bool setDeviceParameters(const std::map<std::string, double>& parameters) = 0;
+        virtual std::map<std::string, double> getRequiredParameters(void) = 0;
 
         virtual ~Device();
 

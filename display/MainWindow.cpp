@@ -3,6 +3,7 @@
 #include "qdebug.h"
 #include "ui_MainWindow.h"
 #include <queue>
+#include <QInputDialog>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent), ui(new Ui::MainWindow), cm(CircuitManager::getInstance()), oc(Orchestrator::getInstance()), im(InventoryManager::getInstance()) {
@@ -42,8 +43,18 @@ MainWindow::MainWindow(QWidget* parent)
     });
 
     connect(ui->simulation, &QPushButton::clicked, [this]() {
-        oc.init(1000.0, 1000000.0, &cm);
-        oc.start();
+//        oc.init(1.0, 1.0, &cm);
+//        oc.start();
+        cm.solveCircuit(1.0);
+        for (auto& node : cm.queryDeviceVoltages("resistor1").second)
+        {
+            qDebug() << node->getVolt() ;
+        }
+
+        for (auto& path : cm.queryDeviceCurrents("resistor1"))
+        {
+            qDebug() << "Node " << QString::fromStdString(path.first->getName()) << " current = " << path.second ;
+        }
     });
 
 
@@ -451,10 +462,11 @@ void MainWindow::onComponentSelected(const QString &componentName)
 
     std::string deviceName = componentName.toStdString() + std::to_string(im.getSupportedDevices()[componentName.toStdString()]);
 
-    qDebug() << "Device " << QString::fromStdString(deviceName) << " created";
-    std::shared_ptr<Device> dev = cm.createDevice(componentName.toStdString(), std::make_pair<std::string, std::vector<double>>(std::move(deviceName), {1e3}));
+    std::map<std::string, double> deviceParameters;
+    std::shared_ptr<Device> dev = cm.createDevice(componentName.toStdString(), deviceName, deviceParameters);
     if (dev != nullptr)
     {
+        qDebug() << "Device " << QString::fromStdString(dev->getName()) << " created";
         for (int i = 0 ; i < dev->getPins().size() ; i++)
         {
             QPointF sceneTerminal = component->mapToScene(analyzeComponentImage(image)[i]);
@@ -462,6 +474,22 @@ void MainWindow::onComponentSelected(const QString &componentName)
             qDebug() << "Saving node " << QString::fromStdString(dev->getPins()[i]->getName()) << " into " << sceneTerminal.x() << sceneTerminal.y();
         }
     }
+    else
+    {
+        qDebug() << "Failed to create device!";
+    }
+    for (auto& parameter : deviceParameters)
+    {
+        bool ok;
+        QString valueStr = QInputDialog::getText(this, "Required Parameters", QString::fromStdString(parameter.first),
+                                                 QLineEdit::Normal, QString::fromStdString(std::to_string(parameter.second)), &ok);
+        if (ok)
+        {
+            double value = valueStr.toDouble();
+            parameter.second = value;
+        }
+    }
+    cm.setDeviceParameters(deviceName, deviceParameters);
 }
 
 MainWindow::~MainWindow() {

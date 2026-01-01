@@ -97,9 +97,9 @@ std::map<std::shared_ptr<Node>, double> Capacitor::getCurrentCoefficients(const 
 
 bool Capacitor::receiveDeviceParameters(void)
 {
-    if (m_parameters[0] > 0)
+    if (!m_parameters.empty())
     {
-        setCapacitance(m_parameters[0]);
+        setCapacitance(m_parameters["capacitance"]);
         return true;
     }
     else
@@ -107,6 +107,11 @@ bool Capacitor::receiveDeviceParameters(void)
         qDebug() << "Failed to set device parameter, less than 0 value provided for capacitance!" ;
         return false;
     }
+}
+
+std::map<std::string, double> Capacitor::getRequiredParameters(void)
+{
+    return {{"capacitance", 1e-6}};
 }
 
 Capacitor::~Capacitor()

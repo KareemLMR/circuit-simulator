@@ -13,7 +13,8 @@ class ICircuitManager
         ~ICircuitManager(){};
 
         virtual std::shared_ptr<Device> createDevice(std::string type,
-                                                     const std::pair<std::string, std::vector<double>>& deviceCharacteristics,
+                                                     std::string deviceName,
+                                                     std::map<std::string, double>& deviceCharacteristics,
                                                      const std::vector<std::shared_ptr<Node>>& pins = {}) = 0;
 
         virtual bool connect(const std::shared_ptr<Node>& node1, const std::shared_ptr<Node>& node2) = 0;
@@ -21,7 +22,7 @@ class ICircuitManager
         virtual void solveCircuit(double deltaT) = 0;
         virtual std::pair<std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>> queryDeviceVoltages(std::string deviceName) = 0;
         virtual std::map<std::shared_ptr<Node>, double> queryDeviceCurrents(std::string deviceName) = 0;
-
+        virtual void setDeviceParameters(std::string deviceName, const std::map<std::string, double>& parameters) = 0;
 };
 
 #endif

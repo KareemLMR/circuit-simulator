@@ -99,9 +99,9 @@ std::map<std::shared_ptr<Node>, double> Inductor::getCurrentCoefficients(const s
 
 bool Inductor::receiveDeviceParameters(void)
 {
-    if (m_parameters[0] > 0)
+    if (!m_parameters.empty())
     {
-        setInductance(m_parameters[0]);
+        setInductance(m_parameters["inductance"]);
         return true;
     }
     else
@@ -109,6 +109,11 @@ bool Inductor::receiveDeviceParameters(void)
         qDebug() << "Failed to set device parameter, less than 0 value provided for inductance!" ;
         return false;
     }
+}
+
+std::map<std::string, double> Inductor::getRequiredParameters(void)
+{
+    return {{"inductance", 1e-3}};
 }
 
 Inductor::~Inductor()

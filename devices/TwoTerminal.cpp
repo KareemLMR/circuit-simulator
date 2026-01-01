@@ -176,7 +176,7 @@ double TwoTerminal::getCurrent(const std::shared_ptr<Node>& node)
     }
 }
 
-bool TwoTerminal::setDeviceParameters(const std::vector<double>& parameters)
+bool TwoTerminal::setDeviceParameters(const std::map<std::string, double>& parameters)
 {
     if (parameters.empty())
     {

@@ -57,8 +57,13 @@ CurrentSource& CurrentSource::operator=(const CurrentSource&& CurrentSource)
 
 bool CurrentSource::receiveDeviceParameters(void)
 {
-    setCurrent(m_parameters[0]);
+    setCurrent(m_parameters["current"]);
     return true;
+}
+
+std::map<std::string, double> CurrentSource::getRequiredParameters(void)
+{
+    return {{"current", 1.0}};
 }
 
 CurrentSource::~CurrentSource()

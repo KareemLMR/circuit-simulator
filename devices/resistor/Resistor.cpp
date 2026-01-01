@@ -93,9 +93,9 @@ std::map<std::shared_ptr<Node>, double> Resistor::getCurrentCoefficients(const s
 
 bool Resistor::receiveDeviceParameters(void)
 {
-    if (m_parameters[0] > 0)
+    if (!m_parameters.empty())
     {
-        setResistance(m_parameters[0]);
+        setResistance(m_parameters["resistance"]);
         return true;
     }
     else
@@ -103,6 +103,11 @@ bool Resistor::receiveDeviceParameters(void)
         qDebug() << "Failed to set device parameter, less than 0 value provided for resistance!" ;
         return false;
     }
+}
+
+std::map<std::string, double> Resistor::getRequiredParameters(void)
+{
+    return {{"resistance", 1e3}};
 }
 
 Resistor::~Resistor()

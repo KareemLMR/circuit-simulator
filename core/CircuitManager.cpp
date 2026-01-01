@@ -18,11 +18,17 @@ CircuitManager& CircuitManager::getInstance(void)
     return *m_instance;
 }
 
+void CircuitManager::setDeviceParameters(std::string deviceName, const std::map<std::string, double>& parameters)
+{
+    m_devices[deviceName]->setDeviceParameters(parameters);
+}
+
 std::shared_ptr<Device> CircuitManager::createDevice(std::string type,
-                                                     const std::pair<std::string, std::vector<double>>& deviceCharacteristics,
+                                                     std::string deviceName,
+                                                     std::map<std::string, double>& deviceCharacteristics,
                                                      const std::vector<std::shared_ptr<Node>>& pins)
 {
-    if (m_devices.find(deviceCharacteristics.first) != m_devices.end())
+    if (m_devices.find(deviceName) != m_devices.end())
     {
         qDebug() << "Device already exists" ;
         return nullptr;
@@ -38,25 +44,29 @@ std::shared_ptr<Device> CircuitManager::createDevice(std::string type,
     {
         qDebug() << "Loading of plugin failed!" ;
     }
-    device->setName(deviceCharacteristics.first);
-    device->setDeviceParameters(deviceCharacteristics.second);
-    m_devices[deviceCharacteristics.first] = std::move(device);
+    device->setName(deviceName);
+    if (deviceCharacteristics.empty())
+    {
+        deviceCharacteristics = device->getRequiredParameters();
+    }
+    device->setDeviceParameters(deviceCharacteristics);
+    m_devices[deviceName] = std::move(device);
 
     int index = 0;
-    for (auto& node : m_devices[deviceCharacteristics.first]->getPins())
+    for (auto& node : m_devices[deviceName]->getPins())
     {
         if (pins.size() != 0)
         {
             node = pins[index];
-            auto& deviceCurrents = m_devices[deviceCharacteristics.first]->getCurrents();
+            auto& deviceCurrents = m_devices[deviceName]->getCurrents();
             deviceCurrents.clear();
         }
-        m_pinOf[node] = m_devices[deviceCharacteristics.first];
+        m_pinOf[node] = m_devices[deviceName];
         m_connected[node] = node;
         index++;
     }
-    m_devices[deviceCharacteristics.first]->updateDeviceState();
-    return m_devices[deviceCharacteristics.first];
+    m_devices[deviceName]->updateDeviceState();
+    return m_devices[deviceName];
 }
 
 bool CircuitManager::connect(const std::shared_ptr<Node>& node1, const std::shared_ptr<Node>& node2)
@@ -469,6 +479,7 @@ void CircuitManager::solveCircuit(double deltaT)
     int index = 0;
     for (auto& node : m_uniqueNodes)
     {
+        qDebug() << "Volt = " << x[index];
         node->setVolt(x[index]);
         for (auto& n : findAllNodesConnected(node))
         {
