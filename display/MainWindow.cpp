@@ -403,9 +403,15 @@ QVector<QPointF> MainWindow::analyzeComponentImage(const QImage& image)
     {
         if (qGray(image.pixel(x, 0)) < 128)
         {
-            terminals.append(QPointF(x, 0));
+            int thickness = 0;
+            int edge = x;
+            while (qGray(image.pixel(x, 0)) < 128)
+            {
+                x++;
+                thickness++;
+            }
+            terminals.append(QPointF(edge + thickness / 2 , 0));
             qDebug() << "First terminal is at the top";
-            break;  // Found first terminal
         }
     }
 
@@ -414,9 +420,15 @@ QVector<QPointF> MainWindow::analyzeComponentImage(const QImage& image)
     {
         if (qGray(image.pixel(width-1, y)) < 128)
         {
-            terminals.append(QPointF(width-1, y));
+            int thickness = 0;
+            int edge = y;
+            while (qGray(image.pixel(width-1, y)) < 128)
+            {
+                y++;
+                thickness++;
+            }
+            terminals.append(QPointF(width-1, edge + thickness / 2));
             qDebug() << "First terminal is at the right";
-            break;
         }
     }
 
@@ -425,9 +437,15 @@ QVector<QPointF> MainWindow::analyzeComponentImage(const QImage& image)
     {
         if (qGray(image.pixel(x, height-1)) < 128)
         {
-            terminals.append(QPointF(x, height-1));
+            int thickness = 0;
+            int edge = x;
+            while (qGray(image.pixel(x, height-1)))
+            {
+                x--;
+                thickness++;
+            }
+            terminals.append(QPointF(edge + thickness / 2, height-1));
             qDebug() << "First terminal is at the bottom";
-            break;
         }
     }
 
@@ -436,9 +454,15 @@ QVector<QPointF> MainWindow::analyzeComponentImage(const QImage& image)
     {
         if (qGray(image.pixel(0, y)) < 128)
         {
-            terminals.append(QPointF(0, y));
+            int thickness = 0;
+            int edge = y;
+            while (qGray(image.pixel(0, y)) < 128)
+            {
+                y--;
+                thickness++;
+            }
+            terminals.append(QPointF(0, edge + thickness / 2));
             qDebug() << "First terminal is at the left";
-            break;
         }
     }
 
