@@ -136,6 +136,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
                     {
                         m_waitingToDrop = true;
                         m_deltaDistByComponent = pixmapItem->pos();
+                        m_lastDraggingPosition = scenePos;
                         qDebug() << "This is a pixmap item (component)";
 
                     }
@@ -175,6 +176,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
                             m_currentWire.push_front(m_currentWireStartPoint.second);
                             m_currentWire.push_back(mouseEvent->pos());
                             m_wiresMap[m_currentWireStartPoint.first].append(m_currentWire);
+                            m_wiresMap[m_currentWireEndPoint.first].append(m_currentWire);
                             m_currentWire.clear();
                             m_wiringPivotPointChanged = false;
                         }
@@ -221,6 +223,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
                         m_currentWire.push_front(m_currentWireStartPoint.second);
                         m_currentWire.push_back(mouseEvent->pos());
                         m_wiresMap[m_currentWireStartPoint.first].append(m_currentWire);
+                        m_wiresMap[m_currentWireEndPoint.first].append(m_currentWire);
                         m_currentWire.clear();
                         m_wiringPivotPointChanged = false;
                     }
@@ -261,6 +264,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
                     }
                     m_waitingToDrop = false;
                 }
+                m_draggingExtensionWire.clear();
                 qDebug() << "Mouse Left Button RELEASED at:" << mouseEvent->pos();
             }
             break;
@@ -282,6 +286,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
                 {
                     m_waitingToDrop = true;
                     m_deltaDistByComponent = pixmapItem->pos();
+                    m_lastDraggingPosition = scenePos;
                     qDebug() << "This is a pixmap item (component)";
 
                 }
@@ -298,6 +303,40 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 
             if (mouseEvent->buttons() & Qt::LeftButton) {
                 qDebug() << "Mouse DRAGGING at scene:" << scenePos;
+                QPointF scenePos = ui->graphicsView->mapToScene(mouseEvent->pos());
+                QPointF delta = scenePos - m_lastDraggingPosition;
+
+                // Get the top-most item at the click position
+                QGraphicsItem* clickedItem = ui->graphicsView->scene()->itemAt(scenePos,
+                                                                               ui->graphicsView->transform());
+                if (clickedItem)
+                {
+                    qDebug() << "Clicked item type:" << typeid(*clickedItem).name();
+                    qDebug() << "Clicked item position:" << clickedItem->pos();
+                    if (QGraphicsPixmapItem* pixmapItem = dynamic_cast<QGraphicsPixmapItem*>(clickedItem))
+                    {
+                        if (m_draggingExtensionWire.size() > 0)
+                        {
+                            qDebug() << "Clearing m_draggingExtensionWire";
+                            for (auto& extension : m_draggingExtensionWire)
+                            {
+                                ui->graphicsView->scene()->removeItem(extension);
+                                delete extension;
+                                extension = nullptr;
+                            }
+                        }
+                        for (auto& node : m_componentsNodesMap[pixmapItem])
+                        {
+                            if (!m_wiresMap[node.first].empty())
+                            {
+                                QGraphicsLineItem* wire = new QGraphicsLineItem(node.second.x(), node.second.y(), node.second.x() + delta.x(), node.second.y() + delta.y());
+                                wire->setPen(QPen(Qt::blue, 2));
+                                ui->graphicsView->scene()->addItem(wire);
+                                m_draggingExtensionWire.push_back(wire);
+                            }
+                        }
+                    }
+                }
                 // handleMouseDrag(mouseEvent);
             }
             else {

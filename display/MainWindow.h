@@ -39,8 +39,10 @@ private:
     std::pair<std::shared_ptr<Node>, QPointF> m_currentWireEndPoint;
     QGraphicsLineItem* m_currentWire1;
     QGraphicsLineItem* m_currentWire2;
+    QVector<QGraphicsLineItem*> m_draggingExtensionWire;
     QVector<QPointF> m_currentWire;
     QPointF m_deltaDistByComponent;
+    QPointF m_lastDraggingPosition;
     CircuitManager& cm;
     Orchestrator& oc;
     InventoryManager& im;
